@@ -3,9 +3,6 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 
-def home(request):
-    return render(request, 'pos/home.html')
-
 def login_view(request):
     if request.method == 'POST':
         username = request.POST['username']
