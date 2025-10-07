@@ -1,3 +1,40 @@
+/* Password field with icon styling */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+    margin: 8px auto;
+    display: block;
+}
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+    width: 100%;
+    max-width: 280px;
+    margin: 0;
+    padding-right: 36px;
+    box-sizing: border-box;
+    height: 40px;
+    line-height: 40px;
+    display: block;
+}
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
@@ -9,14 +46,28 @@ body {
     height: 100vh;
 }
 
+
 .container {
     background: rgba(255, 255, 255, 0.1);
-    padding: 30px;
+    padding: 30px 30px;
     border-radius: 15px;
     text-align: center;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 350px;
+    max-width: 90%;
 }
 
+.container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+input {
+    max-width: 280px;
+    margin: 8px auto;
+    display: block;
+}
 input, button {
     width: 100%;
     padding: 10px;
@@ -31,6 +82,12 @@ button {
     color: #5c5ce0;
     font-weight: bold;
     cursor: pointer;
+    max-width: 120px;
+    margin: 10px auto;
+    font-size: 13px;
+    padding: 7px 0;
+    display: block;
+    border-radius: 7px;
 }
 
 button:hover {
@@ -45,4 +102,3 @@ a {
 .error {
     color: #ff8c8c;
 }
-python manage.py runserver

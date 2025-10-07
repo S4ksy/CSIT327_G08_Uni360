@@ -9,14 +9,47 @@
 <body>
   <div class="container">
     <h1>Create Account</h1>
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
     <form method="POST">
       {% csrf_token %}
-      <input type="text" name="username" placeholder="Username" required>
-      <input type="email" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
+      
+      <!-- Full Name -->
+      <input type="text" 
+             name="full_name" 
+             placeholder="(firstname, lastname)" 
+             pattern="[a-zA-Z ]{2,50}" 
+             title="Please enter letters only (e.g. James Magdales)" 
+             required>
+
+      <!-- Student Email -->
+      <input type="email" 
+       name="student_email" 
+       placeholder="(e.g. firstname.lastname@cit.edu)" 
+       pattern="[a-zA-Z]+\.[a-zA-Z]+@cit\.edu" 
+       title="Please enter this format: firstname.lastname@cit.edu" 
+       required>
+
+      <!-- Student ID -->
+      <input type="text" 
+             name="student_id" 
+             placeholder="(e.g. 23-6555-528)" 
+             pattern="\d{2}-\d{4}-\d{3}" 
+             title="Please enter this format: 23-6555-528" 
+             required>
+
+      <!-- Password -->
+      <input type="password" 
+             name="password" 
+             placeholder="(min 6 characters)" 
+             pattern=".{6,}" 
+             title="Please enter at least 6 characters" 
+             required>
+
       <button type="submit">Sign Up</button>
-      <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
     </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
   </div>
 </body>
 </html>

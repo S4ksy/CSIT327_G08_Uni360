@@ -14,8 +14,8 @@
     {% endif %}
     <form method="POST">
       {% csrf_token %}
-      <input type="text" name="username" placeholder="Username" required>
-      <input type="password" name="password" placeholder="Password" required>
+      <input type="email" name="student_email" placeholder="Student Email" pattern="[a-zA-Z]+\.[a-zA-Z]+@cit\.edu" title="Use format firstname.lastname@cit.edu" required>
+      <input type="password" name="password" id="login-password" placeholder="Password" required>
       <button type="submit">Login</button>
     </form>
     <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
