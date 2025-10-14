@@ -2,14 +2,18 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
+from .models import Profile
 import re
 
+# -----------------------------
+# AUTHENTICATION VIEWS
+# -----------------------------
 
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('student_email')
         password = request.POST.get('password')
-        from django.contrib.auth.models import User
         try:
             user_obj = User.objects.get(email=email)
             user = authenticate(request, username=user_obj.username, password=password)
@@ -21,6 +25,7 @@ def login_view(request):
         except User.DoesNotExist:
             return render(request, 'pos/login.html', {'error': 'No account found for this email'})
     return render(request, 'pos/login.html')
+
 
 def signup_view(request):
     if request.method == 'POST':
@@ -52,11 +57,39 @@ def signup_view(request):
 
     return render(request, 'pos/signup.html')
 
+
 @login_required
 def dashboard(request):
     return render(request, 'pos/dashboard.html')
 
+
+@login_required
+def profile_view(request):
+    if request.method == 'POST':
+        profile_picture = request.FILES.get('profile_picture')
+        if profile_picture:
+            profile, created = Profile.objects.get_or_create(user=request.user)
+            profile.profile_picture = profile_picture
+            profile.save()
+            messages.success(request, 'Profile picture updated successfully!')
+        return redirect('profile')
+    return render(request, 'pos/profile.html')
+
+
 def logout_view(request):
     logout(request)
     return redirect('login')
-asddad
+
+
+# -----------------------------
+# PUBLIC PAGES
+# -----------------------------
+
+def home_view(request):
+    return render(request, 'pos/home.html')
+
+def features_view(request):
+    return render(request, 'pos/features.html')
+
+def about_view(request):
+    return render(request, 'pos/about.html')

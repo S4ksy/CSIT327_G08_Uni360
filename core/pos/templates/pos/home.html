@@ -1,42 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load static %}
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uni360 POS</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
-        }
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-        p {
-            color: #ddd;
-            margin-top: 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home | Uni360</title>
+
+  <style>
+    :root {
+      --primary-color: #6610F2;
+      --secondary-color: #2EC4B6;
+      --accent-color: #FF6B6B;
+      --background-color: #F1F3F5;
+      --surface-color: #FFFFFF;
+      --heading-color: #1C1C1E;
+      --body-text-color: #4A4A4A;
+      --button-gradient: linear-gradient(90deg, #6610F2, #2EC4B6);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--background-color);
+      color: var(--body-text-color);
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    /* --- NAVBAR --- */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 40px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color);
+    }
+
+    nav {
+      flex: 1;
+      text-align: center;
+    }
+
+    nav a {
+      color: var(--body-text-color);
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    nav a:hover, nav a.active {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .nav-buttons a {
+      background: var(--button-gradient);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 8px;
+      margin-left: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .nav-buttons a:hover {
+      opacity: 0.9;
+    }
+
+    /* --- HERO SECTION --- */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 100px 20px;
+      overflow: hidden;
+    }
+
+    .powered {
+      display: inline-block;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+      border-radius: 25px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+      color: #1d1d1d;
+    }
+
+    .highlight {
+      background: linear-gradient(90deg, #d7c8ff, #fff);
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      color: #5c5ce0;
+      font-size: 1.5rem;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 20px auto 40px;
+      font-size: 1.05rem;
+      color: #555;
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary, .btn-outline {
+      text-decoration: none;
+      padding: 12px 25px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: 0.3s;
+    }
+
+    .btn-primary {
+      background: var(--button-gradient);
+      color: #fff;
+    }
+
+    .btn-outline {
+      border: 2px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .btn-outline:hover {
+      background: var(--highlight-color);
+    }
+
+
+
+    /* --- FEATURES SECTION --- */
+    .features-section {
+      padding: 70px 25px;
+      background: #f9f9ff;
+      text-align: center;
+    }
+
+    .features-section h2 {
+      color: var(--primary-color);
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    .features-section p {
+      max-width: 700px;
+      margin: 0 auto 50px;
+      color: #555;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background: #fff;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      transition: 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature-card h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    .feature-card p {
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    /* --- ABOUT SECTION --- */
+    .about-section {
+      padding: 90px 25px;
+      text-align: center;
+      background: #fff;
+    }
+
+    .about-section h2 {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-bottom: 25px;
+    }
+
+    .about-section p {
+      max-width: 750px;
+      margin: 0 auto;
+      color: #555;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      font-size: 0.9rem;
+      background: #f4f4ff;
+      color: #555;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        padding: 10px 15px;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        order: 1;
+        width: 100%;
+      }
+
+      nav {
+        order: 2;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      nav a {
+        font-size: 14px;
+        margin: 0;
+        padding: 5px 10px;
+        border-radius: 5px;
+        background: #f0f0ff;
+        color: var(--primary-color);
+      }
+
+      .nav-buttons {
+        order: 3;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .nav-buttons a {
+        padding: 10px 20px;
+        font-size: 16px;
+        flex: 1;
+        max-width: 120px;
+        text-align: center;
+      }
+
+      .hero {
+        padding: 60px 20px;
+      }
+
+      .powered {
+        font-size: 1rem;
+        padding: 8px 16px;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .highlight {
+        padding: 8px 15px;
+        font-size: 1.2rem;
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        margin: 20px auto 40px;
+        max-width: 90%;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .btn-primary, .btn-outline {
+        padding: 18px 30px;
+        font-size: 1.1rem;
+        width: 200px;
+        margin: 0 auto;
+      }
+
+      .features-section {
+        padding: 60px 20px;
+      }
+
+      .features-section h2 {
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+      }
+
+      .features-section p {
+        font-size: 1.1rem;
+        margin-bottom: 40px;
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .feature-card {
+        padding: 25px;
+      }
+
+      .feature-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+      }
+
+      .feature-card p {
+        font-size: 1rem;
+      }
+
+      .about-section {
+        padding: 60px 20px;
+      }
+
+      .about-section h2 {
+        font-size: 2.2rem;
+        margin-bottom: 30px;
+      }
+
+      .about-section p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+      }
+
+      footer {
+        padding: 25px 20px;
+        font-size: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to Uni360 POS System 🚀</h1>
-        <p>Your modern point-of-sale and management solution.</p>
+  <header>
+    <div class="logo">Uni360</div>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+    </nav>
+    <div class="nav-buttons">
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'signup' %}">Register</a>
     </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="home">
+    <div class="powered">Powered by CIT-Innovation</div>
+    <h1>Campus Navigation</h1>
+    <div class="highlight">Made Simple</div>
+    <p>
+      A web-based Campus Navigation system that helps students easily find rooms, buildings, parking areas, and facilities inside the campus — making campus life smoother and smarter.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="{% url 'signup' %}" class="btn-primary">Get Started</a>
+      <a href="{% url 'login' %}" class="btn-outline">Sign In</a>
+    </div>
+
+
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="features-section" id="features">
+    <h2>Explore Uni360 Features</h2>
+    <p>Uni360 simplifies campus life through intelligent navigation and map-based tools for an easier, faster, and smarter experience.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>🧭 Smart Navigation</h3>
+        <p>Locate any building or facility instantly using smart, GPS-based routing within your campus.</p>
+      </div>
+      <div class="feature-card">
+        <h3>🏫 Room Locator</h3>
+        <p>Find classrooms, offices, and labs with ease — no more confusion or getting lost.</p>
+      </div>
+      <div class="feature-card">
+        <h3>🚗 Parking Finder</h3>
+        <p>Get real-time parking availability updates and directions to open spaces.</p>
+      </div>
+      <div class="feature-card">
+        <h3>📱 Mobile Access</h3>
+        <p>Access Uni360 on any device, anywhere — built for both desktop and mobile users.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT SECTION -->
+  <section class="about-section" id="about">
+    <h2>About Uni360</h2>
+    <p>
+      Uni360 is a web-based campus navigation platform designed to help students, staff, and visitors easily locate specific rooms, buildings, or facilities within the university premises. 
+      <br><br>
+      Developed by <b>CIT-Innovation</b>, Uni360 aims to make campus exploration seamless and stress-free through intuitive mapping, real-time route guidance, and location-based tools that enhance accessibility and convenience.
+      <br><br>
+      Whether you’re new to the campus or just trying to find your next class, Uni360 ensures you’ll never get lost again.
+    </p>
+  </section>
+
+  <footer>
+    <p>© 2025 Uni360 — Empowering Your Campus Experience</p>
+  </footer>
+
+  <script>
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('nav a');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop - sectionHeight / 3) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
