@@ -45,6 +45,10 @@ def signup_view(request):
             error = 'Invalid Student ID format. Use 23-6555-528'
         elif not full_name or not password:
             error = 'All fields are required.'
+        elif User.objects.filter(username=student_id).exists():
+            error = 'This Student ID is already registered.'
+        elif User.objects.filter(email=student_email).exists():
+            error = 'This email is already registered.'
 
         if error:
             return render(request, 'pos/signup.html', {'error': error})
@@ -78,7 +82,7 @@ def profile_view(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('login')
+    return redirect('home')
 
 
 # -----------------------------
