@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Campus Map | Uni360</title>
+  <link rel="stylesheet" href="{% static 'pos/style.css' %}">
+  <link rel="stylesheet" href="{% static 'pos/map.css' %}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <h2>Uni360</h2>
+      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
+      <a href="{% url 'map' %}" class="active">🗺️ Campus Map</a>
+      <a href="#">🛡️ Safety</a>
+    </div>
+    <a href="{% url 'logout' %}" class="logout">Logout</a>
+  </div>
+
+  <!-- Top Header -->
+  <div class="top-header">
+    <div class="search-bar">
+      <input type="text" placeholder="Search buildings...">
+      <button>Search🔍</button>
+    </div>
+    <div class="profile-menu">
+      <a href="{% url 'profile' %}">
+        <img src="{% static 'pos/default-profile.jpg' %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <h1>Campus Navigation 🗺️</h1>
+    <p>Explore the university campus interactively.</p>
+    <div id="map"></div>
+    <div class="building-info" id="building-info" style="display: none;">
+      <h3 id="building-name"></h3>
+      <p id="building-description"></p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script id="buildings-data" type="application/json">{{ buildings|safe }}</script>
+  <script>
+    // Initialize map centered on CIT-U Cebu City campus
+    const map = L.map('map').setView([10.31672, 123.89071], 18); // CIT-U Cebu City coordinates
+
+    // Set bounds to restrict view to campus area only
+    const southWest = L.latLng(10.31172, 123.88571);
+    const northEast = L.latLng(10.32172, 123.89571);
+    const bounds = L.latLngBounds(southWest, northEast);
+    map.setMaxBounds(bounds);
+    map.setMinZoom(18);
+    map.setMaxZoom(20);
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Buildings data from Django
+    const buildings = JSON.parse(document.getElementById('buildings-data').textContent);
+
+    // Add markers for buildings
+    buildings.forEach(building => {
+      const marker = L.marker([building.latitude, building.longitude]).addTo(map);
+      marker.bindPopup(`<b>${building.name}</b><br>${building.description}`);
+
+      marker.on('click', function() {
+        document.getElementById('building-name').textContent = building.name;
+        document.getElementById('building-description').textContent = building.description;
+        document.getElementById('building-info').style.display = 'block';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -14,4 +14,10 @@ urlpatterns = [
     path('home/', views.home_view, name='home'),
     path('features/', views.features_view, name='features'),
     path('about/', views.about_view, name='about'),
+
+    # Campus Navigation
+    path('map/', views.map_view, name='map'),
+
+    # Safety Alerts
+    path('send-alert/', views.send_alert_view, name='send_alert'),
 ]

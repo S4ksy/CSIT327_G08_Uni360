@@ -3,8 +3,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Profile
+from django.http import JsonResponse
+from .models import Profile, Building, Alert
 import re
+import json
 
 # -----------------------------
 # AUTHENTICATION VIEWS
@@ -97,3 +99,43 @@ def features_view(request):
 
 def about_view(request):
     return render(request, 'pos/about.html')
+
+
+# -----------------------------
+# CAMPUS NAVIGATION VIEWS
+# -----------------------------
+
+@login_required
+def map_view(request):
+    buildings = Building.objects.all()
+    buildings_data = [
+        {
+            'name': building.name,
+            'description': building.description,
+            'latitude': building.latitude,
+            'longitude': building.longitude,
+        }
+        for building in buildings
+    ]
+    return render(request, 'pos/map.html', {'buildings': json.dumps(buildings_data)})
+
+
+# -----------------------------
+# SAFETY ALERT VIEWS
+# -----------------------------
+
+@login_required
+def send_alert_view(request):
+    if request.method == 'POST':
+        alert_type = request.POST.get('alert_type')
+        location = request.POST.get('location', '')
+        message = request.POST.get('message', '')
+
+        Alert.objects.create(
+            user=request.user,
+            alert_type=alert_type,
+            location=location,
+            message=message
+        )
+        return JsonResponse({'status': 'success', 'message': 'Alert sent successfully!'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
