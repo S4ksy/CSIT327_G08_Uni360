@@ -6,7 +6,7 @@ services:
     plan: free
     branch: main
     buildCommand: "./build.sh"
-    startCommand: "gunicorn core.wsgi:application"
+    startCommand: "gunicorn core.core.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
