@@ -53,55 +53,60 @@ body {
 
 /* --- NAVBAR --- */
 header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 40px;
-      background: #fff;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
-    .logo {
-      font-weight: 700;
-      font-size: 1.5rem;
-      color: var(--primary-color);
-    }
+.logo {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
 
-    nav {
-      flex: 1;
-      text-align: center;
-    }
+nav {
+  flex: 1;
+  text-align: center;
+}
 
-    nav a {
-      color: var(--text-color);
-      text-decoration: none;
-      margin: 0 15px;
-      font-weight: 500;
-      transition: 0.3s;
-    }
+nav a {
+  color: var(--text-color);
+  text-decoration: none;
+  margin: 0 15px;
+  font-weight: 500;
+  transition: 0.3s;
+}
 
-    nav a:hover, nav a.active {
-      color: var(--primary-color);
-      font-weight: 600;
-    }
+nav a:hover, nav a.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
 
-    .nav-buttons a {
-      background: var(--button-gradient);
-      color: #fff;
-      padding: 8px 18px;
-      border-radius: 8px;
-      margin-left: 10px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.3s;
-    }
+.nav-buttons a {
+  background: var(--button-gradient);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  margin-left: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.3s;
+}
 
-    .nav-buttons a:hover {
-      opacity: 0.9;
-    }
+.nav-buttons a:hover {
+  opacity: 0.9;
+}
+
+.nav-buttons a.active {
+  background: var(--primary-color);
+  color: white;
+}
 
 /* --- FORM CONTAINER --- */
 .container {
