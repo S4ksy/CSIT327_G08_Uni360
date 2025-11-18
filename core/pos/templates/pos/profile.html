@@ -12,12 +12,8 @@
     <div>
       <h2>Uni360</h2>
       <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
-      <a href="#">🗺️ Campus Map</a>
-      <a href="#">🏢 Buildings</a>
-      <a href="#">🍽️ Dining</a>
-      <a href="#">🚗 Parking</a>
-      <a href="#">📚 Library</a>
-      <a href="#">🛡️ Safety</a>
+      <a href="{% url 'map' %}">🗺️ Campus Map</a>
+      <a href="{% url 'safety' %}">🛡️ Safety</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -68,6 +64,10 @@
         </div>
       </div>
       <button class="edit-btn" aria-label="Edit profile">Edit Profile</button>
+      <!-- Dark/Light Mode Toggle -->
+      <div style="margin-top: 20px; text-align: center;">
+  <button id="theme-toggle" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">🌙 Dark Mode</button>
+      </div>
     </div>
   </div>
 
@@ -75,6 +75,26 @@
     // Auto-submit form when file is selected
     document.getElementById('profile_picture').addEventListener('change', function() {
       this.form.submit();
+    });
+
+    // Dark/Light Mode Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const body = document.body;
+
+    // Check for saved theme preference or default to light mode
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    if (currentTheme === 'dark') {
+      body.classList.add('dark');
+      themeToggle.textContent = '☀️ Light Mode';
+    } else {
+      themeToggle.textContent = '🌙 Dark Mode';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      const theme = body.classList.contains('dark') ? 'dark' : 'light';
+      localStorage.setItem('theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
     });
   </script>
 </body>

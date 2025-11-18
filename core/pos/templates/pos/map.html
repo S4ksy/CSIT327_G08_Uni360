@@ -6,7 +6,11 @@
   <title>Campus Map | Uni360</title>
   <link rel="stylesheet" href="{% static 'pos/style.css' %}">
   <link rel="stylesheet" href="{% static 'pos/map.css' %}">
+  
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 </head>
 <body>
   <div class="sidebar">
@@ -22,8 +26,8 @@
   <!-- Top Header -->
   <div class="top-header">
     <div class="search-bar">
-      <input type="text" placeholder="Search buildings...">
-      <button>Search🔍</button>
+      <input type="text" id="search-input" placeholder="Search buildings...">
+      <button onclick="searchBuilding()">Search🔍</button>
     </div>
     <div class="profile-menu">
       <a href="{% url 'profile' %}">
@@ -35,46 +39,445 @@
   <div class="content">
     <h1>Campus Navigation 🗺️</h1>
     <p>Explore the university campus interactively.</p>
+    
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+      <div class="route-controls">
+        <select id="start-location">
+          <option value="">Select starting point...</option>
+          <option value="current">📍 My Current Location</option>
+        </select>
+        <select id="end-location">
+          <option value="">Select destination...</option>
+        </select>
+        <button onclick="calculateRoute()">🚶 Get Directions</button>
+        <button onclick="clearRoute()">✖️ Clear Route</button>
+      </div>
+    </div>
+
+    <!-- Map Container -->
     <div id="map"></div>
+
+    <!-- Building Info Panel -->
     <div class="building-info" id="building-info" style="display: none;">
       <h3 id="building-name"></h3>
       <p id="building-description"></p>
+      <button onclick="setAsDestination()" class="btn-primary">Set as Destination</button>
+    </div>
+
+    <!-- Directions Panel -->
+    <div class="directions-panel" id="directions-panel">
+      <h4>📍 Directions</h4>
+      <div id="directions-steps"></div>
     </div>
   </div>
 
+  <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script id="buildings-data" type="application/json">{{ buildings|safe }}</script>
+  <!-- Leaflet Routing Machine -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
   <script>
-    // Initialize map centered on CIT-U Cebu City campus
-    const map = L.map('map').setView([10.31672, 123.89071], 18); // CIT-U Cebu City coordinates
+    // CIT-U Campus buildings
+    const buildings = [
+      {
+        name: "NGE Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2945,
+        longitude: 123.8811,
+        color: "#6610F2",
+      },
+      {
+        name: "GLE Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2953,
+        longitude: 123.8812,
+        color: "#6610F2",
+      },
+      {
+        name: "ACAD Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2958,
+        longitude: 123.8810,
+        color: "#6610F2",
+      },
+      {
+        name: "RTL Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2948,
+        longitude: 123.8801,
+        color: "#6610F2",
+      },
+      {
+        name: "SAL Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2955,
+        longitude: 123.8799,
+        color: "#6610F2",
+      },
+      {
+        name: "ALLIED 1st Building Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2958,
+        longitude: 123.8795,
+        color: "#6610F2",
+      },
+      {
+        name: "ALLIED 2nd Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2953,
+        longitude: 123.8797,
+        color: "#6610F2",
+      },
+      {
+        name: "ALLIED 3rd Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2947,
+        longitude: 123.8799,
+        color: "#6610F2",
+      },
+      {
+        name: "Library",
+        description: "Main campus library with study areas",
+        latitude: 10.2951,
+        longitude: 123.8805,
+        color: "#2EC4B6",
+        type: "library"
+      },
+      {
+        name: "Main Canteen",
+        description: "Cafeteria and student activities",
+        latitude: 10.29619,
+        longitude: 123.8805,
+        color: "#FF6B6B",
+        type: "cafeteria"
+      },
+      {
+        name: "GYM Canteen",
+        description: "Cafeteria and student activities",
+        latitude: 10.2965,
+        longitude: 123.8798,
+        color: "#FF6B6B",
+        type: "cafeteria"
+      },
+      {
+        name: "Gymnasium",
+        description: "Sports facilities and gym",
+        latitude: 10.2963,
+        longitude: 123.8795,
+        color: "#E71D36",
+        type: "sports"
+      },
+      {
+        name: "NGE Parking Area",
+        description: "Student and faculty parking",
+        latitude: 10.2944,
+        longitude: 123.8805,
+        color: "#7B68EE",
+        type: "parking"
+      },
+      {
+        name: "RTL Parking Area",
+        description: "Student and faculty parking",
+        latitude: 10.2947,
+        longitude: 123.8805,
+        color: "#7B68EE",
+        type: "parking"
+      },
+      {
+        name: "GLE Parking Area",
+        description: "Student and faculty parking",
+        latitude: 10.2952,
+        longitude: 123.8810,
+        color: "#7B68EE",
+        type: "parking"
+      },
+      {
+        name: "Espacio Parking Area",
+        description: "Student and faculty parking",
+        latitude: 10.2957,
+        longitude: 123.8805,
+        color: "#7B68EE",
+        type: "parking"
+      },
+      {
+        name: "Back Gate Parking Area",
+        description: "Student and faculty parking",
+        latitude: 10.2968,
+        longitude: 123.8800,
+        color: "#7B68EE",
+        type: "parking"
+      }
+      
+    ];
 
-    // Set bounds to restrict view to campus area only
-    const southWest = L.latLng(10.31172, 123.88571);
-    const northEast = L.latLng(10.32172, 123.89571);
-    const bounds = L.latLngBounds(southWest, northEast);
-    map.setMaxBounds(bounds);
-    map.setMinZoom(18);
-    map.setMaxZoom(20);
+    // Building type to icon mapping
+    const buildingIcons = {
+      'library': '📚',
+      'cafeteria': '🍽️',
+      'sports': '⚽',
+      'lab': '💻',
+      'parking': '🅿️',
+      'default': '🏢'
+    };
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    let map;
+    let markers = [];
+    let selectedBuilding = null;
+    let routingControl = null;
+    let userMarker = null;
 
-    // Buildings data from Django
-    const buildings = JSON.parse(document.getElementById('buildings-data').textContent);
+    // Initialize the map
+    function initMap() {
+      // Create map centered on CIT-U
+      map = L.map('map').setView([10.2950, 123.8810], 17.5);
+      
+      // Add OpenStreetMap tiles (FREE!)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
 
-    // Add markers for buildings
-    buildings.forEach(building => {
-      const marker = L.marker([building.latitude, building.longitude]).addTo(map);
-      marker.bindPopup(`<b>${building.name}</b><br>${building.description}`);
+      // Populate building selects
+      populateBuildingSelects();
 
-      marker.on('click', function() {
-        document.getElementById('building-name').textContent = building.name;
-        document.getElementById('building-description').textContent = building.description;
-        document.getElementById('building-info').style.display = 'block';
+      // Add building markers
+      addBuildingMarkers();
+
+      // Try to get user location
+      getUserLocation();
+    }
+
+    // Add markers for all buildings
+    function addBuildingMarkers() {
+      buildings.forEach(building => {
+        // Get appropriate icon for building type
+        const icon = buildingIcons[building.type] || buildingIcons.default;
+        
+        // Create custom colored marker
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: `<div style="background: ${building.color}; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 16px;">${icon}</div>`,
+          iconSize: [35, 35]
+        });
+
+        const marker = L.marker([building.latitude, building.longitude], {
+          icon: customIcon
+        }).addTo(map);
+
+        // Add popup
+        marker.bindPopup(`
+          <div style="min-width: 200px;">
+            <h3 style="color: ${building.color}; margin: 0 0 8px 0;">${building.name}</h3>
+            <p style="margin: 0 0 10px 0; color: #666;">${building.description}</p>
+            <button onclick="setBuildingAsDestination('${building.name}')" 
+                    style="background: linear-gradient(90deg, #6610F2, #2EC4B6); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
+              Get Directions 🚶
+            </button>
+          </div>
+        `);
+
+        // Show building info when clicked
+        marker.on('click', () => {
+          showBuildingInfo(building);
+          selectedBuilding = building;
+        });
+
+        markers.push(marker);
       });
-    });
+    }
+
+    // Show building information in the side panel
+    function showBuildingInfo(building) {
+      document.getElementById('building-name').textContent = building.name;
+      document.getElementById('building-description').textContent = building.description;
+      document.getElementById('building-info').style.display = 'block';
+    }
+
+    // Populate dropdown selects with building options
+    function populateBuildingSelects() {
+      const startSelect = document.getElementById('start-location');
+      const endSelect = document.getElementById('end-location');
+      
+      buildings.forEach(building => {
+        const startOption = new Option(building.name, building.name);
+        const endOption = new Option(building.name, building.name);
+        
+        startSelect.add(startOption);
+        endSelect.add(endOption);
+      });
+    }
+
+    // Set building as destination from popup
+    window.setBuildingAsDestination = function(buildingName) {
+      document.getElementById('end-location').value = buildingName;
+      calculateRoute();
+    }
+
+    // Set selected building as destination
+    function setAsDestination() {
+      if (selectedBuilding) {
+        document.getElementById('end-location').value = selectedBuilding.name;
+        calculateRoute();
+      }
+    }
+
+    // Calculate route between selected locations
+    function calculateRoute() {
+      const start = document.getElementById('start-location').value;
+      const end = document.getElementById('end-location').value;
+      
+      if (!start || !end) {
+        alert('Please select both starting point and destination.');
+        return;
+      }
+
+      if (start === end) {
+        alert('Starting point and destination cannot be the same!');
+        return;
+      }
+
+      // Remove existing route
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
+
+      let startCoords;
+      
+      if (start === 'current') {
+        // Use user's current location
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            position => {
+              startCoords = [position.coords.latitude, position.coords.longitude];
+              
+              // Add or update user marker
+              if (userMarker) {
+                userMarker.setLatLng(startCoords);
+              } else {
+                userMarker = L.marker(startCoords, {
+                  icon: L.divIcon({
+                    html: '📍',
+                    className: 'user-marker',
+                    iconSize: [30, 30]
+                  })
+                }).addTo(map).bindPopup('You are here!');
+              }
+              
+              calculateRouteWithCoords(startCoords, end);
+            },
+            () => {
+              alert('Unable to get your location. Please select a building as starting point.');
+            }
+          );
+          return;
+        }
+      } else {
+        // Find building coordinates
+        const startBuilding = buildings.find(b => b.name === start);
+        if (startBuilding) {
+          startCoords = [startBuilding.latitude, startBuilding.longitude];
+          calculateRouteWithCoords(startCoords, end);
+        }
+      }
+    }
+
+    // Calculate route with specific coordinates
+    function calculateRouteWithCoords(startCoords, endName) {
+      const endBuilding = buildings.find(b => b.name === endName);
+      if (!endBuilding) {
+        alert('Destination building not found.');
+        return;
+      }
+
+      const endCoords = [endBuilding.latitude, endBuilding.longitude];
+
+      // Create routing control
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(startCoords),
+          L.latLng(endCoords)
+        ],
+        routeWhileDragging: false,
+        addWaypoints: false,
+        lineOptions: {
+          styles: [{color: '#6610F2', opacity: 0.8, weight: 6}]
+        },
+        createMarker: function(i, waypoint, n) {
+          const icon = L.divIcon({
+            html: i === 0 ? '🚶' : '📍',
+            className: 'route-marker',
+            iconSize: [30, 30]
+          });
+          return L.marker(waypoint.latLng, {icon: icon});
+        }
+      }).addTo(map);
+
+      // Show directions panel
+      document.getElementById('directions-panel').style.display = 'block';
+    }
+
+    // Clear current route
+    function clearRoute() {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+      document.getElementById('directions-panel').style.display = 'none';
+      document.getElementById('start-location').value = '';
+      document.getElementById('end-location').value = '';
+      document.getElementById('building-info').style.display = 'none';
+    }
+
+    // Search for buildings
+    function searchBuilding() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const building = buildings.find(b => 
+        b.name.toLowerCase().includes(searchTerm) || 
+        b.description.toLowerCase().includes(searchTerm)
+      );
+      
+      if (building) {
+        map.setView([building.latitude, building.longitude], 19);
+        showBuildingInfo(building);
+        selectedBuilding = building;
+        
+        // Open the marker's popup
+        markers.forEach(marker => {
+          const markerLatLng = marker.getLatLng();
+          if (markerLatLng.lat === building.latitude && markerLatLng.lng === building.longitude) {
+            marker.openPopup();
+          }
+        });
+      } else {
+        alert('Building not found. Please try another search term.');
+      }
+    }
+
+    // Get user's current location
+    function getUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            const userCoords = [position.coords.latitude, position.coords.longitude];
+            
+            userMarker = L.marker(userCoords, {
+              icon: L.divIcon({
+                html: '📍',
+                className: 'user-marker',
+                iconSize: [30, 30]
+              })
+            }).addTo(map).bindPopup('You are here!');
+          },
+          error => {
+            console.log('Geolocation not available or permission denied');
+          }
+        );
+      }
+    }
+
+    // Initialize map when page loads
+    window.onload = initMap;
   </script>
 </body>
 </html>

@@ -16,3 +16,5 @@ services:
         value: False
       - key: ALLOWED_HOSTS
         value: "*"
+      - key: DATABASE_URL
+        value: postgresql://postgres:[YOUR_PASSWORD]@db.nvldqqitjevixdcoxgnu.supabase.co:5432/postgres

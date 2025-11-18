@@ -20,4 +20,5 @@ urlpatterns = [
 
     # Safety Alerts
     path('send-alert/', views.send_alert_view, name='send_alert'),
+    path('safety/', views.safety_view, name='safety'),
 ]
