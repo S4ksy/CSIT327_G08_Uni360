@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifications | Uni360</title>
+  <link rel="stylesheet" href="{% static 'pos/style.css' %}">
+  <link rel="stylesheet" href="{% static 'pos/dashboard.css' %}">
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <h2 style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 24px;">🎓</span>
+        <span>Uni360</span>
+      </h2>
+      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
+      <a href="{% url 'map' %}">🗺️ Campus Map</a>
+      <a href="{% url 'safety' %}">🛡️ Safety</a>
+      <a href="#" class="active">🔔 Notifications</a>
+    </div>
+    <a href="{% url 'logout' %}" class="logout">Logout</a>
+  </div>
+
+  <!-- Top Header -->
+  <div class="top-header">
+    <div class="search-bar">
+      <input type="text" placeholder="Search notifications...">
+      <button>Search🔍</button>
+    </div>
+    <div class="profile-menu">
+      <a href="{% url 'profile' %}">
+        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <h1>Safety Notifications 🔔</h1>
+    <p>View all your safety alerts and notifications.</p>
+
+    <!-- Active Alerts Section -->
+    <div id="active-alerts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 15px; margin-top: 20px;">
+      <!-- Alerts will be loaded here -->
+    </div>
+  </div>
+
+  <!-- Email Detail Modal -->
+  <div id="email-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 700px; max-height: 80%; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: relative;">
+      <button onclick="closeModal()" style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: #6c757d; z-index: 1001;">&times;</button>
+      <div style="padding: 30px; padding-top: 60px; border-bottom: 1px solid #dee2e6;">
+        <div id="email-detail-header">
+          <!-- Header will be loaded here -->
+        </div>
+      </div>
+      <div id="email-detail-body" style="padding: 30px;">
+        <!-- Body will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allAlerts = [];
+
+    function loadActiveAlerts() {
+      fetch('{% url "get_alerts" %}')
+        .then(response => response.json())
+        .then(data => {
+          allAlerts = data.alerts;
+          displayEmailCards(allAlerts);
+        })
+        .catch(error => console.error('Error loading alerts:', error));
+    }
+
+    function displayEmailCards(alerts) {
+      const container = document.getElementById('active-alerts');
+
+      if (alerts.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666;">No notifications yet.</p>';
+        return;
+      }
+
+      container.innerHTML = alerts.map((alert, index) => {
+        const isUnread = !alert.is_read;
+        const alertTypeColors = {
+          'Emergency': '#ff4444',
+          'Safety Concern': '#ff8800',
+          'Other': '#666666'
+        };
+        const color = alertTypeColors[alert.alert_type] || '#666666';
+
+        return `
+          <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+              <div style="font-weight: 600; color: #495057;">${alert.user}</div>
+              <div style="color: #6c757d; font-size: 12px;">${formatTime(alert.timestamp)}</div>
+            </div>
+            <div style="font-size: 14px; color: ${color}; margin-bottom: 8px; font-weight: 500;">${alert.alert_type}</div>
+            <div style="font-size: 16px; color: #495057; margin-bottom: 8px; font-weight: 500;">${alert.location || 'Safety Alert'}</div>
+            <div style="color: #6c757d; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${alert.message ? alert.message.substring(0, 100) + (alert.message.length > 100 ? '...' : '') : 'No additional message.'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openEmailModal(index) {
+      const alert = allAlerts[index];
+      const header = document.getElementById('email-detail-header');
+      const body = document.getElementById('email-detail-body');
+      const modal = document.getElementById('email-modal');
+
+      header.innerHTML = `
+        <div style="margin-bottom: 15px;">
+          <h2 style="margin: 0; color: #495057;">${alert.location || 'Safety Alert'}</h2>
+        </div>
+        <div style="color: #6c757d; font-size: 14px;">
+          <strong>From:</strong> ${alert.user}<br>
+          <strong>Type:</strong> ${alert.alert_type}<br>
+          <strong>Time:</strong> ${alert.timestamp}
+        </div>
+      `;
+
+      body.innerHTML = `
+        <div style="line-height: 1.6; color: #495057;">
+          ${alert.message ? `<p>${alert.message}</p>` : '<p>No additional message.</p>'}
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+
+      // Mark as read
+      if (!alert.is_read) {
+        alert.is_read = true;
+        displayEmailCards(allAlerts);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('email-modal').style.display = 'none';
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      const hours = diff / (1000 * 60 * 60);
+
+      if (hours < 1) return 'Just now';
+      if (hours < 24) return `${Math.floor(hours)}h ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Load alerts on page load and refresh every 30 seconds
+    window.onload = function() {
+      loadActiveAlerts();
+      setInterval(loadActiveAlerts, 30000);
+    };
+  </script>
+</body>
+</html>

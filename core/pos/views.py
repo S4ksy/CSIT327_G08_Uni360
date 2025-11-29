@@ -14,7 +14,7 @@ import json
 
 def login_view(request):
     if request.method == 'POST':
-        email = request.POST.get('student_email')
+        email = request.POST.get('student_email').lower()
         password = request.POST.get('password')
         try:
             user_obj = User.objects.get(email=email)
@@ -49,14 +49,14 @@ def signup_view(request):
             error = 'All fields are required.'
         elif User.objects.filter(username=student_id).exists():
             error = 'This Student ID is already registered.'
-        elif User.objects.filter(email=student_email).exists():
+        elif User.objects.filter(email__iexact=student_email).exists():
             error = 'This email is already registered.'
 
         if error:
             return render(request, 'pos/signup.html', {'error': error})
 
         # Create the user
-        user = User.objects.create_user(username=full_name, email=student_email, password=password)
+        user = User.objects.create_user(username=full_name, email=student_email.lower(), password=password)
         user.save()
 
         return redirect('login')
@@ -144,6 +144,53 @@ def send_alert_view(request):
 @login_required
 def safety_view(request):
     return render(request, 'pos/safety.html')
+
+
+@login_required
+def notifications_view(request):
+    return render(request, 'pos/notifications.html')
+
+
+@login_required
+def get_alerts_view(request):
+    # Get recent alerts (last 24 hours)
+    from django.utils import timezone
+    from datetime import timedelta
+
+    recent_alerts = Alert.objects.filter(
+        timestamp__gte=timezone.now() - timedelta(hours=24)
+    ).order_by('-timestamp')[:10]  # Last 10 alerts
+
+    alerts_data = [
+        {
+            'id': alert.id,
+            'user': alert.user.username,
+            'alert_type': alert.get_alert_type_display(),
+            'location': alert.location,
+            'message': alert.message,
+            'timestamp': alert.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_read': request.user in alert.read_by.all()
+        }
+        for alert in recent_alerts
+    ]
+
+    # Mark all as read for this user
+    for alert in recent_alerts:
+        alert.read_by.add(request.user)
+
+    return JsonResponse({'alerts': alerts_data})
+
+
+@login_required
+def get_unread_alerts_count(request):
+    from django.utils import timezone
+    from datetime import timedelta
+
+    unread_count = Alert.objects.filter(
+        timestamp__gte=timezone.now() - timedelta(hours=24)
+    ).exclude(read_by=request.user).count()
+
+    return JsonResponse({'unread_count': unread_count})
 
 
 # -----------------------------

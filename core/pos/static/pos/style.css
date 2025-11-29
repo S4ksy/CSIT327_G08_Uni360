@@ -4,18 +4,25 @@
   --text-color: #2b2b2b;
   --highlight-color: #ede8ff;
   --button-gradient: linear-gradient(90deg, #5c5ce0, #7b4ee6);
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --sidebar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --sidebar-text: white;
 }
+
 
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background-color: #ffffff;
+  background-color: var(--bg-color);
   color: var(--text-color);
   overflow-x: hidden;
   scroll-behavior: smooth;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Password field with icon styling */
@@ -110,7 +117,7 @@ nav a:hover, nav a.active {
 
 /* --- FORM CONTAINER --- */
 .container {
-  background: #fff;
+  background: var(--card-bg);
   padding: 40px;
   border-radius: 15px;
   text-align: center;
@@ -118,6 +125,7 @@ nav a:hover, nav a.active {
   width: 400px;
   max-width: 80%;
   margin: 100px auto;
+  border: 1px solid var(--border-color);
 }
 
 .container form {
@@ -130,10 +138,12 @@ nav a:hover, nav a.active {
 input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 0.3s;
+  background: var(--card-bg);
+  color: var(--text-color);
 }
 
 input:focus {

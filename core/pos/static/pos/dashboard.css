@@ -1,22 +1,14 @@
-:root {
-  --primary-color: #6610F2;
-  --secondary-color: #2EC4B6;
-  --accent-color: #FF6B6B;
-  --background-color: #F1F3F5;
-  --surface-color: #FFFFFF;
-  --heading-color: #1C1C1E;
-  --body-text-color: #4A4A4A;
-  --button-gradient: linear-gradient(90deg, #6610F2, #2EC4B6);
-}
+/* Dashboard styles using global CSS variables */
 
 body {
   margin: 0;
   display: flex;
   font-family: 'Poppins', sans-serif;
-  background: var(--button-gradient);
-  color: white;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   height: 100vh;
   overflow: hidden;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Sidebar */
@@ -94,11 +86,12 @@ body {
 .search-bar {
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--card-bg);
   border-radius: 25px;
   padding: 5px 10px;
   width: 400px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
 }
 
 .search-bar input {
@@ -141,6 +134,8 @@ body {
   padding: 20px 40px;
   overflow-y: auto;
   height: calc(100vh - 100px);
+  background: var(--bg-color);
+  color: var(--text-color);
 }
 
 .content h1 {

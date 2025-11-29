@@ -14,6 +14,7 @@
       <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
       <a href="{% url 'map' %}">🗺️ Campus Map</a>
       <a href="{% url 'safety' %}">🛡️ Safety</a>
+      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -26,7 +27,7 @@
     </div>
     <div class="profile-menu">
       <a href="{% url 'profile' %}">
-        <img src="{% static 'pos/default-profile.jpg' %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
       </a>
     </div>
   </div>
@@ -45,25 +46,32 @@
         </div>
         <h2>{{ request.user.username }}</h2>
       </div>
-      <div class="profile-info">
-        <div class="info-group">
-          <label for="full-name">Full Name</label>
-          <p id="full-name">{{ request.user.username }}</p>
+      <form method="POST" id="profile-form">
+        {% csrf_token %}
+        <div class="profile-info">
+          <div class="info-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" value="{{ request.user.username }}" readonly disabled>
+          </div>
+          <div class="info-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="{{ request.user.email }}" readonly disabled>
+          </div>
+          <div class="info-group">
+            <label for="student-id">Student ID</label>
+            <p id="student-id">23-6555-528</p> <!-- Not editable -->
+          </div>
+          <div class="info-group">
+            <label for="joined">Joined</label>
+            <p id="joined">{{ request.user.date_joined|date:"F j, Y" }}</p> <!-- Not editable -->
+          </div>
         </div>
-        <div class="info-group">
-          <label for="email">Email</label>
-          <p id="email">{{ request.user.email }}</p>
+        <div class="profile-actions">
+          <button type="button" class="edit-btn" id="edit-btn" aria-label="Edit profile">Edit Profile</button>
+          <button type="submit" class="save-btn" id="save-btn" style="display: none;" aria-label="Save changes">Save Changes</button>
+          <button type="button" class="cancel-btn" id="cancel-btn" style="display: none;" aria-label="Cancel editing">Cancel</button>
         </div>
-        <div class="info-group">
-          <label for="student-id">Student ID</label>
-          <p id="student-id">23-6555-528</p> <!-- Placeholder, replace with actual field -->
-        </div>
-        <div class="info-group">
-          <label for="joined">Joined</label>
-          <p id="joined">{{ request.user.date_joined|date:"F j, Y" }}</p>
-        </div>
-      </div>
-      <button class="edit-btn" aria-label="Edit profile">Edit Profile</button>
+      </form>
       <!-- Dark/Light Mode Toggle -->
       <div style="margin-top: 20px; text-align: center;">
   <button id="theme-toggle" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">🌙 Dark Mode</button>
@@ -75,6 +83,46 @@
     // Auto-submit form when file is selected
     document.getElementById('profile_picture').addEventListener('change', function() {
       this.form.submit();
+    });
+
+    // Edit Profile Functionality
+    const editBtn = document.getElementById('edit-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+    let originalUsername = usernameInput.value;
+    let originalEmail = emailInput.value;
+
+    editBtn.addEventListener('click', () => {
+      // Enable editing
+      usernameInput.readOnly = false;
+      usernameInput.disabled = false;
+      emailInput.readOnly = false;
+      emailInput.disabled = false;
+      usernameInput.focus();
+
+      // Show save/cancel, hide edit
+      editBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+      cancelBtn.style.display = 'inline-block';
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      // Reset values
+      usernameInput.value = originalUsername;
+      emailInput.value = originalEmail;
+
+      // Disable editing
+      usernameInput.readOnly = true;
+      usernameInput.disabled = true;
+      emailInput.readOnly = true;
+      emailInput.disabled = true;
+
+      // Show edit, hide save/cancel
+      editBtn.style.display = 'inline-block';
+      saveBtn.style.display = 'none';
+      cancelBtn.style.display = 'none';
     });
 
     // Dark/Light Mode Toggle

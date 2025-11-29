@@ -15,10 +15,14 @@
 <body>
   <div class="sidebar">
     <div>
-      <h2>Uni360</h2>
+      <h2 style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 24px;">🎓</span>
+        <span>Uni360</span>
+      </h2>
       <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
       <a href="{% url 'map' %}" class="active">🗺️ Campus Map</a>
-      <a href="#">🛡️ Safety</a>
+      <a href="{% url 'safety' %}">🛡️ Safety</a>
+      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -31,7 +35,7 @@
     </div>
     <div class="profile-menu">
       <a href="{% url 'profile' %}">
-        <img src="{% static 'pos/default-profile.jpg' %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
       </a>
     </div>
   </div>
@@ -67,7 +71,7 @@
 
     <!-- Directions Panel -->
     <div class="directions-panel" id="directions-panel">
-      <h4>📍 Directions</h4>
+      <h4>📍 Recent Routes</h4>
       <div id="directions-steps"></div>
     </div>
   </div>
@@ -83,7 +87,7 @@
       {
         name: "NGE Building",
         description: "Administration and main classrooms",
-        latitude: 10.2943,
+        latitude: 10.2944,
         longitude: 123.8811,
         color: "#6610F2",
       },
@@ -97,7 +101,7 @@
       {
         name: "ACAD Building",
         description: "Administration and main classrooms",
-        latitude: 10.2958,
+        latitude: 10.29575,
         longitude: 123.8810,
         color: "#6610F2",
       },
@@ -109,10 +113,17 @@
         color: "#6610F2",
       },
       {
+        name: "RTL Building",
+        description: "Administration and main classrooms",
+        latitude: 10.2949,
+        longitude: 123.8809,
+        color: "#6610F2",
+      },
+      {
         name: "SAL Building",
         description: "Administration and main classrooms",
-        latitude: 10.2955,
-        longitude: 123.8799,
+        latitude: 10.2954,
+        longitude: 123.8800,
         color: "#6610F2",
       },
       {
@@ -139,8 +150,8 @@
       {
         name: "Library",
         description: "Main campus library with study areas",
-        latitude: 10.2951,
-        longitude: 123.8805,
+        latitude: 10.29527,
+        longitude: 123.88078,
         color: "#2EC4B6",
         type: "library"
       },
@@ -195,7 +206,7 @@
       {
         name: "Espacio Parking Area",
         description: "Student and faculty parking",
-        latitude: 10.2957,
+        latitude: 10.2958,
         longitude: 123.8805,
         color: "#7B68EE",
         type: "parking"
@@ -226,12 +237,13 @@
     let selectedBuilding = null;
     let routingControl = null;
     let userMarker = null;
+    let routeHistory = JSON.parse(localStorage.getItem('routeHistory')) || [];
 
     // Initialize the map
     function initMap() {
       // Create map centered on CIT-U
       map = L.map('map').setView([10.2950, 123.8810], 17.5);
-      
+
       // Add OpenStreetMap tiles (FREE!)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
@@ -246,6 +258,15 @@
 
       // Try to get user location
       getUserLocation();
+
+      // Check for selected route from dashboard
+      const selectedRoute = JSON.parse(localStorage.getItem('selectedRoute'));
+      if (selectedRoute) {
+        localStorage.removeItem('selectedRoute');
+        document.getElementById('start-location').value = selectedRoute.start;
+        document.getElementById('end-location').value = selectedRoute.end;
+        setTimeout(() => calculateRoute(), 1000); // Delay to ensure map is loaded
+      }
     }
 
     // Add markers for all buildings
@@ -298,11 +319,13 @@
     function populateBuildingSelects() {
       const startSelect = document.getElementById('start-location');
       const endSelect = document.getElementById('end-location');
-      
-      buildings.forEach(building => {
-        const startOption = new Option(building.name, building.name);
-        const endOption = new Option(building.name, building.name);
-        
+
+      const uniqueNames = [...new Set(buildings.map(b => b.name))];
+
+      uniqueNames.forEach(name => {
+        const startOption = new Option(name, name);
+        const endOption = new Option(name, name);
+
         startSelect.add(startOption);
         endSelect.add(endOption);
       });
@@ -364,7 +387,7 @@
                 }).addTo(map).bindPopup('You are here!');
               }
               
-              calculateRouteWithCoords(startCoords, end);
+              calculateRouteWithCoords(startCoords, end, start);
             },
             () => {
               alert('Unable to get your location. Please select a building as starting point.');
@@ -377,44 +400,156 @@
         const startBuilding = buildings.find(b => b.name === start);
         if (startBuilding) {
           startCoords = [startBuilding.latitude, startBuilding.longitude];
-          calculateRouteWithCoords(startCoords, end);
+          calculateRouteWithCoords(startCoords, end, start);
         }
       }
     }
 
     // Calculate route with specific coordinates
-    function calculateRouteWithCoords(startCoords, endName) {
-      const endBuilding = buildings.find(b => b.name === endName);
-      if (!endBuilding) {
+    function calculateRouteWithCoords(startCoords, endName, startName) {
+      const matchingBuildings = buildings.filter(b => b.name === endName);
+      if (matchingBuildings.length === 0) {
         alert('Destination building not found.');
         return;
       }
 
-      const endCoords = [endBuilding.latitude, endBuilding.longitude];
+      // Find the closest building to the start
+      let closestBuilding = matchingBuildings[0];
+      let minDistance = Infinity;
+      matchingBuildings.forEach(building => {
+        const distance = map.distance(L.latLng(startCoords), L.latLng(building.latitude, building.longitude));
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestBuilding = building;
+        }
+      });
 
-      // Create routing control
+      const endCoords = [closestBuilding.latitude, closestBuilding.longitude];
+
+      // Remove existing route
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
+
+      // Create routing control with OSRM
       routingControl = L.Routing.control({
         waypoints: [
           L.latLng(startCoords),
           L.latLng(endCoords)
         ],
+        router: L.Routing.osrmv1({
+          serviceUrl: 'https://router.project-osrm.org/route/v1'
+        }),
         routeWhileDragging: false,
         addWaypoints: false,
+        showAlternatives: false,
+        fitSelectedRoutes: true,
         lineOptions: {
-          styles: [{color: '#6610F2', opacity: 0.8, weight: 6}]
+          styles: [
+            { 
+              color: '#6610F2', 
+              opacity: 0.8, 
+              weight: 6,
+              className: 'route-line'
+            }
+          ]
         },
         createMarker: function(i, waypoint, n) {
-          const icon = L.divIcon({
-            html: i === 0 ? '🚶' : '📍',
-            className: 'route-marker',
-            iconSize: [30, 30]
-          });
-          return L.marker(waypoint.latLng, {icon: icon});
+          if (i === 0 && startCoords[0] !== waypoint.latLng.lat) {
+            // This is the user's current location
+            const icon = L.divIcon({
+              html: '🚶',
+              className: 'route-marker start-marker',
+              iconSize: [30, 30]
+            });
+            return L.marker(waypoint.latLng, {icon: icon}).bindPopup('Start Point');
+          } else {
+            // This is a building
+            const icon = L.divIcon({
+              html: i === 0 ? '🚶' : '📍',
+              className: 'route-marker',
+              iconSize: [30, 30]
+            });
+            return L.marker(waypoint.latLng, {icon: icon}).bindPopup(i === 0 ? 'Start' : 'Destination');
+          }
         }
       }).addTo(map);
 
-      // Show directions panel
-      document.getElementById('directions-panel').style.display = 'block';
+      // Handle route events
+      routingControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        const route = routes[0];
+
+        // Add to history
+        routeHistory.unshift({
+          start: startName,
+          end: endName,
+          distance: route.summary.totalDistance,
+          time: route.summary.totalTime
+        });
+        // Keep only last 5
+        if (routeHistory.length > 5) routeHistory.pop();
+
+        // Save to localStorage
+        localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
+
+        // Display history in the panel
+        displayHistory();
+
+        // Show directions panel
+        document.getElementById('directions-panel').style.display = 'block';
+      });
+
+      routingControl.on('routingerror', function(e) {
+        console.error('Routing error:', e.error);
+        alert('Unable to calculate route. Please try again.');
+      });
+    }
+
+    // Recalculate a route from history
+    function recalculateRoute(start, end) {
+      document.getElementById('start-location').value = start;
+      document.getElementById('end-location').value = end;
+      calculateRoute();
+    }
+
+    // Display route history
+    function displayHistory() {
+      const directionsElement = document.getElementById('directions-steps');
+
+      if (routeHistory.length === 0) {
+        directionsElement.innerHTML = '<p>No recent routes.</p>';
+        return;
+      }
+
+      let historyHTML = '<div class="history-list">';
+
+      routeHistory.forEach((item, index) => {
+        const distanceKm = (item.distance / 1000).toFixed(1);
+        const timeMin = Math.round(item.time / 60);
+        historyHTML += `
+          <div class="history-item" onclick="recalculateRoute('${item.start}', '${item.end}')">
+            <div class="history-route">${item.start} → ${item.end}</div>
+            <div class="history-details">${distanceKm} km • ${timeMin} min</div>
+          </div>
+        `;
+      });
+
+      historyHTML += '</div>';
+
+      directionsElement.innerHTML = historyHTML;
+    }
+
+    // Get appropriate icon for direction type
+    function getDirectionIcon(step) {
+      const text = step.text.toLowerCase();
+      if (text.includes('left')) return '↰';
+      if (text.includes('right')) return '↱';
+      if (text.includes('straight')) return '↑';
+      if (text.includes('arrive')) return '📍';
+      if (text.includes('head') || text.includes('start')) return '🚶';
+      if (text.includes('roundabout')) return '🔄';
+      return '•';
     }
 
     // Clear current route
@@ -423,10 +558,24 @@
         map.removeControl(routingControl);
         routingControl = null;
       }
-      document.getElementById('directions-panel').style.display = 'none';
-      document.getElementById('start-location').value = '';
-      document.getElementById('end-location').value = '';
+      
+      // Clear any custom route layers
+      map.eachLayer(layer => {
+        if (layer instanceof L.Polyline) {
+          map.removeLayer(layer);
+        }
+      });
+      
+      // Keep history panel visible
       document.getElementById('building-info').style.display = 'none';
+      
+      // Reset dropdowns but keep "current location" option
+      const startSelect = document.getElementById('start-location');
+      const endSelect = document.getElementById('end-location');
+      endSelect.value = '';
+      if (startSelect.value !== 'current') {
+        startSelect.value = '';
+      }
     }
 
     // Search for buildings

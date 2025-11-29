@@ -10,10 +10,14 @@
 <body>
   <div class="sidebar">
     <div>
-      <h2>Uni360</h2>
+      <h2 style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 24px;">🎓</span>
+        <span>Uni360</span>
+      </h2>
       <a href="#" class="active">🏠 Dashboard</a>
       <a href="{% url 'map' %}">🗺️ Campus Map</a>
       <a href="{% url 'safety' %}">🛡️ Safety</a>
+      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -26,7 +30,7 @@
     </div>
     <div class="profile-menu">
       <a href="{% url 'profile' %}">
-        <img src="{% static 'pos/default-profile.jpg' %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
       </a>
     </div>
   </div>
@@ -76,10 +80,54 @@
           <p>Administration and main classrooms</p>
         </div>
       </div>
+ 
+      <!-- Recent Routes Section -->
+      <div style="margin-top: 30px;">
+        <h2>Recent Routes 🗺️</h2>
+        <div id="recent-routes" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 20px;">
+          <!-- Routes will be loaded here -->
+        </div>
+      </div>
+ 
     </div>
   </div>
 
   <script>
+    // Load and display recent routes
+    function loadRecentRoutes() {
+      const history = JSON.parse(localStorage.getItem('routeHistory')) || [];
+      const container = document.getElementById('recent-routes');
+
+      if (history.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666;">No recent routes yet. Visit the map to start navigating!</p>';
+        return;
+      }
+
+      container.innerHTML = history.map(item => {
+        const distanceKm = (item.distance / 1000).toFixed(1);
+        const timeMin = Math.round(item.time / 60);
+        return `
+          <div class="route-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;" onclick="goToRoute('${item.start}', '${item.end}')">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h3 style="margin: 0; font-size: 18px;">${item.start} → ${item.end}</h3>
+              <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px;">${timeMin} min</span>
+            </div>
+            <p style="margin: 0; opacity: 0.9;">${distanceKm} km • Click to navigate</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function goToRoute(start, end) {
+      localStorage.setItem('selectedRoute', JSON.stringify({start, end}));
+      window.location.href = '{% url "map" %}';
+    }
+
+    // Load routes on page load
+    window.onload = function() {
+      loadRecentRoutes();
+    };
+
     // Safety Alert Button Functionality
     const safetyBtn = document.getElementById('safety-alert-btn');
     const alertForm = document.getElementById('alert-form');

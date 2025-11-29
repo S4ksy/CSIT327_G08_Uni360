@@ -30,6 +30,7 @@ class Alert(models.Model):
     location = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    read_by = models.ManyToManyField(User, related_name='read_alerts', blank=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.alert_type} at {self.timestamp}"
