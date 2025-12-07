@@ -53,11 +53,6 @@ body {
   margin-bottom: 5px;
 }
 
-.sidebar a:hover {
-  background: rgba(255,255,255,0.2);
-  transform: translateX(4px);
-}
-
 /* Active page effect */
 .sidebar a.active {
   background: var(--button-gradient);
@@ -147,6 +142,75 @@ body {
   font-size: 28px;
   margin-bottom: 10px;
 }
+
+/* Recent routes panel (collapsible) */
+.recent-routes-section {
+  margin-left: 240px;
+  margin-top: 18px;
+  margin-right: 40px;
+  padding: 16px;
+}
+
+.recent-routes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.recent-routes .history-item {
+  background: rgba(255,255,255,0.06);
+  padding: 12px 14px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  color: white;
+}
+
+.recent-routes .history-route { font-weight: 700; margin-bottom: 6px; }
+.recent-routes .history-details { font-size: 12px; opacity: 0.9; }
+
+/* top-right time badge */
+.time-badge {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: rgba(255,255,255,0.14);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Recent routes header/actions */
+.recent-routes-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom: 12px;
+}
+.recent-routes-header h3 { margin:0; color: white; font-size: 30px; font-weight: 800; }
+.recent-routes-actions { display:flex; gap:8px; align-items:center; }
+.clear-history {
+  background: rgba(255,255,255,0.12);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.clear-history:hover { background: rgba(255,255,255,0.18); }
+
+/* Card layout tweaks */
+.recent-routes .history-item { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.recent-routes .history-item:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.18); }
+.history-top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.history-meta { font-size: 13px; opacity: 0.9; }
+.distance-badge { background: rgba(255,255,255,0.12); padding:4px 8px; border-radius: 999px; font-weight:600; }
+
+.recent-routes-footer { margin-top:12px; display:flex; justify-content:center; }
+.show-more { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.12); padding:6px 12px; border-radius:8px; cursor:pointer; }
+.show-more:hover { background: rgba(255,255,255,0.04); }
 
 /* Map Container */
 #map {

@@ -4,8 +4,8 @@ body {
   margin: 0;
   display: flex;
   font-family: 'Poppins', sans-serif;
-  background: var(--sidebar-bg);
-  color: var(--sidebar-text);
+  background: var(--button-gradient);
+  color: white;
   height: 100vh;
   overflow: hidden;
   transition: background-color 0.3s, color 0.3s;
@@ -134,8 +134,6 @@ body {
   padding: 20px 40px;
   overflow-y: auto;
   height: calc(100vh - 100px);
-  background: var(--bg-color);
-  color: var(--text-color);
 }
 
 .content h1 {
