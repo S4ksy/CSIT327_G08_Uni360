@@ -37,7 +37,7 @@
     <div class="profile-card">
       <div class="profile-header">
         <div class="profile-avatar-container">
-          <img src="{% if request.user.profile.profile_picture %}{{ request.user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="profile-avatar" id="profile-avatar">
+          <img src="{% if request.user.profile.profile_picture_data %}{{ request.user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="profile-avatar" id="profile-avatar">
           <form method="POST" enctype="multipart/form-data" class="upload-form">
             {% csrf_token %}
             <label for="profile_picture" class="upload-btn" aria-label="Upload new profile picture">📷</label>
