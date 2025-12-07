@@ -9,8 +9,18 @@
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet Routing Machine CSS -->
+  <!-- Leaflet Routing Machine CSS (not used for custom path routing but kept if you need it later) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+  <style>
+    /* Ensure the map has a visible height (move this to your CSS if you prefer) */
+    #map { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+    .custom-marker { line-height: 0; }
+    .user-marker { font-size: 20px; }
+    .route-marker { font-size: 18px; }
+    .history-item { cursor: pointer; padding: 6px 0; border-bottom: 1px solid #eee; }
+    .controls-panel { margin-bottom: 12px; }
+  </style>
 </head>
 <body>
   <div class="sidebar">
@@ -35,7 +45,7 @@
     </div>
     <div class="profile-menu">
       <a href="{% url 'profile' %}">
-        <img src="{% if user.profile.profile_picture %}{{ user.profile.profile_picture.url }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
+        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
       </a>
     </div>
   </div>
@@ -68,158 +78,49 @@
       <p id="building-description"></p>
       <button onclick="setAsDestination()" class="btn-primary">Set as Destination</button>
     </div>
-
-    <!-- Directions Panel -->
-    <div class="directions-panel" id="directions-panel">
-      <h4>📍 Recent Routes</h4>
-      <div id="directions-steps"></div>
+    <!-- Recent Routes shown under the map -->
+    <div id="recent-routes-section" class="recent-routes-section">
+      <div class="recent-routes-header">
+        <h3>📍 Recent Routes</h3>
+        <div class="recent-routes-actions">
+          <button id="clear-history" class="clear-history" title="Clear recent routes">Clear</button>
+        </div>
+      </div>
+      <div id="recent-routes" class="recent-routes" aria-live="polite">
+        <!-- Filled by displayHistory() -->
+      </div>
+      <div id="recent-routes-footer" class="recent-routes-footer">
+        <button id="show-more-btn" class="show-more" style="display:none">Show more</button>
+      </div>
     </div>
   </div>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Leaflet Routing Machine -->
+  <!-- Leaflet Routing Machine (optional) -->
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
   <script>
     // CIT-U Campus buildings
     const buildings = [
-      {
-        name: "NGE Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2944,
-        longitude: 123.8811,
-        color: "#6610F2",
-      },
-      {
-        name: "GLE Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2953,
-        longitude: 123.8812,
-        color: "#6610F2",
-      },
-      {
-        name: "ACAD Building",
-        description: "Administration and main classrooms",
-        latitude: 10.29575,
-        longitude: 123.8810,
-        color: "#6610F2",
-      },
-      {
-        name: "RTL Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2948,
-        longitude: 123.8801,
-        color: "#6610F2",
-      },
-      {
-        name: "RTL Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2949,
-        longitude: 123.8809,
-        color: "#6610F2",
-      },
-      {
-        name: "SAL Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2954,
-        longitude: 123.8800,
-        color: "#6610F2",
-      },
-      {
-        name: "ALLIED 1st Building Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2958,
-        longitude: 123.8795,
-        color: "#6610F2",
-      },
-      {
-        name: "ALLIED 2nd Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2953,
-        longitude: 123.8797,
-        color: "#6610F2",
-      },
-      {
-        name: "ALLIED 3rd Building",
-        description: "Administration and main classrooms",
-        latitude: 10.2947,
-        longitude: 123.8799,
-        color: "#6610F2",
-      },
-      {
-        name: "Library",
-        description: "Main campus library with study areas",
-        latitude: 10.29527,
-        longitude: 123.88078,
-        color: "#2EC4B6",
-        type: "library"
-      },
-      {
-        name: "Main Canteen",
-        description: "Cafeteria and student activities",
-        latitude: 10.29619,
-        longitude: 123.8805,
-        color: "#FF6B6B",
-        type: "cafeteria"
-      },
-      {
-        name: "GYM Canteen",
-        description: "Cafeteria and student activities",
-        latitude: 10.2965,
-        longitude: 123.8798,
-        color: "#FF6B6B",
-        type: "cafeteria"
-      },
-      {
-        name: "Gymnasium",
-        description: "Sports facilities and gym",
-        latitude: 10.2963,
-        longitude: 123.8795,
-        color: "#E71D36",
-        type: "sports"
-      },
-      {
-        name: "NGE Parking Area",
-        description: "Student and faculty parking",
-        latitude: 10.2944,
-        longitude: 123.8805,
-        color: "#7B68EE",
-        type: "parking"
-      },
-      {
-        name: "RTL Parking Area",
-        description: "Student and faculty parking",
-        latitude: 10.2947,
-        longitude: 123.8805,
-        color: "#7B68EE",
-        type: "parking"
-      },
-      {
-        name: "GLE Parking Area",
-        description: "Student and faculty parking",
-        latitude: 10.2952,
-        longitude: 123.8810,
-        color: "#7B68EE",
-        type: "parking"
-      },
-      {
-        name: "Espacio Parking Area",
-        description: "Student and faculty parking",
-        latitude: 10.2958,
-        longitude: 123.8805,
-        color: "#7B68EE",
-        type: "parking"
-      },
-      {
-        name: "Back Gate Parking Area",
-        description: "Student and faculty parking",
-        latitude: 10.2968,
-        longitude: 123.8800,
-        color: "#7B68EE",
-        type: "parking"
-      }
-      
+      { name: "NGE Building", description: "Administration and main classrooms", latitude: 10.2944, longitude: 123.8811, color: "#6610F2" },
+      { name: "GLE Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8812, color: "#6610F2" },
+      { name: "ACAD Building", description: "Administration and main classrooms", latitude: 10.29575, longitude: 123.8810, color: "#6610F2" },
+      { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2948, longitude: 123.8801, color: "#6610F2" },
+      { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2949, longitude: 123.8809, color: "#6610F2" },
+      { name: "SAL Building", description: "Administration and main classrooms", latitude: 10.2954, longitude: 123.8800, color: "#6610F2" },
+      { name: "ALLIED 1st Building Building", description: "Administration and main classrooms", latitude: 10.2958, longitude: 123.8795, color: "#6610F2" },
+      { name: "ALLIED 2nd Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8797, color: "#6610F2" },
+      { name: "ALLIED 3rd Building", description: "Administration and main classrooms", latitude: 10.2947, longitude: 123.8799, color: "#6610F2" },
+      { name: "Library", description: "Main campus library with study areas", latitude: 10.29527, longitude: 123.88078, color: "#2EC4B6", type: "library" },
+      { name: "Main Canteen", description: "Cafeteria and student activities", latitude: 10.29619, longitude: 123.8805, color: "#FF6B6B", type: "cafeteria" },
+      { name: "GYM Canteen", description: "Cafeteria and student activities", latitude: 10.2965, longitude: 123.8798, color: "#FF6B6B", type: "cafeteria" },
+      { name: "Gymnasium", description: "Sports facilities and gym", latitude: 10.2963, longitude: 123.8795, color: "#E71D36", type: "sports" },
+      { name: "NGE Parking Area", description: "Student and faculty parking", latitude: 10.2944, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+      { name: "RTL Parking Area", description: "Student and faculty parking", latitude: 10.2947, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+      { name: "GLE Parking Area", description: "Student and faculty parking", latitude: 10.2952, longitude: 123.8810, color: "#7B68EE", type: "parking" },
+      { name: "Espacio Parking Area", description: "Student and faculty parking", latitude: 10.2958, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+      { name: "Back Gate Parking Area", description: "Student and faculty parking", latitude: 10.2968, longitude: 123.8800, color: "#7B68EE", type: "parking" }
     ];
 
     // Building type to icon mapping
@@ -238,67 +139,135 @@
     let routingControl = null;
     let userMarker = null;
     let routeHistory = JSON.parse(localStorage.getItem('routeHistory')) || [];
+    let campusPathNetwork = null;
 
-    // Initialize the map
+    // Layers we manage separately
+    let campusLayer = null;         // the campus path network polyline (keep)
+    let routeLayer = null;          // polyline for the currently drawn route (remove cleanly)
+    let routeMarkers = [];          // markers placed for the route (start/end)
+    
+    // Haversine distance (meters)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function snapToNearestPath(lat, lon) {
+      if (!campusPathNetwork) return [lat, lon];
+
+      const coordinates = campusPathNetwork.geometry.coordinates;
+      let nearestPoint = [lat, lon];
+      let nearestDistance = Infinity;
+
+      for (let i = 0; i < coordinates.length - 1; i++) {
+        const p1 = coordinates[i];
+        const p2 = coordinates[i + 1];
+
+        // project point onto segment (p1,p2). coordinates are [lon, lat]
+        const denom = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) || 1e-9;
+        const t = Math.max(0, Math.min(1, ((lon - p1[0]) * (p2[0] - p1[0]) + (lat - p1[1]) * (p2[1] - p1[1])) / denom));
+
+        const projectedLat = p1[1] + t * (p2[1] - p1[1]);
+        const projectedLon = p1[0] + t * (p2[0] - p1[0]);
+
+        const distance = calculateDistance(lat, lon, projectedLat, projectedLon);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestPoint = [projectedLat, projectedLon];
+        }
+      }
+
+      return nearestPoint;
+    }
+
+    function loadCampusPathNetwork() {
+      fetch('{% static "pos/campus.json" %}')
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          if (data.features && data.features.length > 0) {
+            campusPathNetwork = data.features[0];
+            console.log('Campus path network loaded');
+
+            if (campusPathNetwork.geometry && campusPathNetwork.geometry.type === 'LineString') {
+              const pathCoordinates = campusPathNetwork.geometry.coordinates.map(c => [c[1], c[0]]);
+              campusLayer = L.polyline(pathCoordinates, {
+                color: '#FF6B35',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '5, 5',
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(map);
+            }
+          } else {
+            console.warn('Campus path network is empty or malformed');
+          }
+        })
+        .catch(err => console.error('Error loading campus path network:', err));
+    }
+
     function initMap() {
-      // Create map centered on CIT-U
       map = L.map('map').setView([10.2950, 123.8810], 17.5);
 
-      // Add OpenStreetMap tiles (FREE!)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19
       }).addTo(map);
 
-      // Populate building selects
+      loadCampusPathNetwork();
       populateBuildingSelects();
-
-      // Add building markers
       addBuildingMarkers();
-
-      // Try to get user location
       getUserLocation();
+      displayHistory();
 
-      // Check for selected route from dashboard
+      // Restore selectedRoute if dashboard pushed one
       const selectedRoute = JSON.parse(localStorage.getItem('selectedRoute'));
       if (selectedRoute) {
         localStorage.removeItem('selectedRoute');
         document.getElementById('start-location').value = selectedRoute.start;
         document.getElementById('end-location').value = selectedRoute.end;
-        setTimeout(() => calculateRoute(), 1000); // Delay to ensure map is loaded
+        setTimeout(() => calculateRoute(), 800);
       }
     }
 
-    // Add markers for all buildings
     function addBuildingMarkers() {
-      buildings.forEach(building => {
-        // Get appropriate icon for building type
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      buildings.forEach((building, index) => {
         const icon = buildingIcons[building.type] || buildingIcons.default;
-        
-        // Create custom colored marker
         const customIcon = L.divIcon({
           className: 'custom-marker',
           html: `<div style="background: ${building.color}; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 16px;">${icon}</div>`,
           iconSize: [35, 35]
         });
 
-        const marker = L.marker([building.latitude, building.longitude], {
-          icon: customIcon
-        }).addTo(map);
+        // Use JSON.stringify to safely inject the building name into inline onclick
+        const safeName = JSON.stringify(building.name);
 
-        // Add popup
-        marker.bindPopup(`
+        const popupHtml = `
           <div style="min-width: 200px;">
             <h3 style="color: ${building.color}; margin: 0 0 8px 0;">${building.name}</h3>
             <p style="margin: 0 0 10px 0; color: #666;">${building.description}</p>
-            <button onclick="setBuildingAsDestination('${building.name}')" 
-                    style="background: linear-gradient(90deg, #6610F2, #2EC4B6); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
+            <button onclick="setBuildingAsDestination(${safeName})" 
+              style="background: linear-gradient(90deg, #6610F2, #2EC4B6); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
               Get Directions 🚶
             </button>
           </div>
-        `);
+        `;
 
-        // Show building info when clicked
+        const marker = L.marker([building.latitude, building.longitude], { icon: customIcon }).addTo(map);
+        marker.bindPopup(popupHtml);
+
         marker.on('click', () => {
           showBuildingInfo(building);
           selectedBuilding = building;
@@ -308,14 +277,12 @@
       });
     }
 
-    // Show building information in the side panel
     function showBuildingInfo(building) {
       document.getElementById('building-name').textContent = building.name;
       document.getElementById('building-description').textContent = building.description;
       document.getElementById('building-info').style.display = 'block';
     }
 
-    // Populate dropdown selects with building options
     function populateBuildingSelects() {
       const startSelect = document.getElementById('start-location');
       const endSelect = document.getElementById('end-location');
@@ -325,19 +292,17 @@
       uniqueNames.forEach(name => {
         const startOption = new Option(name, name);
         const endOption = new Option(name, name);
-
         startSelect.add(startOption);
         endSelect.add(endOption);
       });
     }
 
-    // Set building as destination from popup
+    // Called from popup button
     window.setBuildingAsDestination = function(buildingName) {
       document.getElementById('end-location').value = buildingName;
       calculateRoute();
     }
 
-    // Set selected building as destination
     function setAsDestination() {
       if (selectedBuilding) {
         document.getElementById('end-location').value = selectedBuilding.name;
@@ -345,256 +310,261 @@
       }
     }
 
-    // Calculate route between selected locations
     function calculateRoute() {
       const start = document.getElementById('start-location').value;
       const end = document.getElementById('end-location').value;
-      
-      if (!start || !end) {
-        alert('Please select both starting point and destination.');
-        return;
-      }
 
-      if (start === end) {
-        alert('Starting point and destination cannot be the same!');
-        return;
-      }
+      if (!start || !end) { alert('Please select both starting point and destination.'); return; }
+      if (start === end) { alert('Starting point and destination cannot be the same!'); return; }
 
-      // Remove existing route
-      if (routingControl) {
-        map.removeControl(routingControl);
-      }
+      // Remove previous route visuals
+      clearRoute(false); // keep dropdowns if needed
 
-      let startCoords;
-      
       if (start === 'current') {
-        // Use user's current location
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            position => {
-              startCoords = [position.coords.latitude, position.coords.longitude];
-              
-              // Add or update user marker
-              if (userMarker) {
-                userMarker.setLatLng(startCoords);
-              } else {
-                userMarker = L.marker(startCoords, {
-                  icon: L.divIcon({
-                    html: '📍',
-                    className: 'user-marker',
-                    iconSize: [30, 30]
-                  })
-                }).addTo(map).bindPopup('You are here!');
-              }
-              
-              calculateRouteWithCoords(startCoords, end, start);
-            },
-            () => {
-              alert('Unable to get your location. Please select a building as starting point.');
+          navigator.geolocation.getCurrentPosition(position => {
+            const startCoords = [position.coords.latitude, position.coords.longitude];
+            if (userMarker) {
+              userMarker.setLatLng(startCoords);
+            } else {
+              userMarker = L.marker(startCoords, {
+                icon: L.divIcon({ html: '📍', className: 'user-marker', iconSize: [30, 30] })
+              }).addTo(map).bindPopup('You are here!');
             }
-          );
+            calculateRouteWithCoords(startCoords, end, start);
+          }, () => alert('Unable to get your location. Please select a building as starting point.'));
+          return;
+        } else {
+          alert('Geolocation not supported by your browser.');
           return;
         }
       } else {
-        // Find building coordinates
         const startBuilding = buildings.find(b => b.name === start);
         if (startBuilding) {
-          startCoords = [startBuilding.latitude, startBuilding.longitude];
+          const startCoords = [startBuilding.latitude, startBuilding.longitude];
           calculateRouteWithCoords(startCoords, end, start);
+        } else {
+          alert('Starting building not found.');
         }
       }
     }
 
-    // Calculate route with specific coordinates
-    function calculateRouteWithCoords(startCoords, endName, startName) {
-      const matchingBuildings = buildings.filter(b => b.name === endName);
-      if (matchingBuildings.length === 0) {
-        alert('Destination building not found.');
-        return;
+    function findSegmentIndex(lat, lon) {
+      if (!campusPathNetwork) return -1;
+      const coordinates = campusPathNetwork.geometry.coordinates;
+      let minDistance = Infinity;
+      let segmentIndex = -1;
+
+      for (let i = 0; i < coordinates.length - 1; i++) {
+        const p1 = coordinates[i];
+        const p2 = coordinates[i + 1];
+        const denom = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) || 1e-9;
+        const t = Math.max(0, Math.min(1, ((lon - p1[0]) * (p2[0] - p1[0]) + (lat - p1[1]) * (p2[1] - p1[1])) / denom));
+        const projectedLat = p1[1] + t * (p2[1] - p1[1]);
+        const projectedLon = p1[0] + t * (p2[0] - p1[0]);
+        const distance = calculateDistance(lat, lon, projectedLat, projectedLon);
+        if (distance < minDistance) {
+          minDistance = distance;
+          segmentIndex = i;
+        }
+      }
+      return segmentIndex;
+    }
+
+    function calculateRouteAlongPaths(startLat, startLon, endLat, endLon) {
+      if (!campusPathNetwork) return [];
+      const coordinates = campusPathNetwork.geometry.coordinates;
+      const startSegment = findSegmentIndex(startLat, startLon);
+      const endSegment = findSegmentIndex(endLat, endLon);
+      if (startSegment === -1 || endSegment === -1) return [];
+
+      const routePath = [];
+      const minSegment = Math.min(startSegment, endSegment);
+      const maxSegment = Math.max(startSegment, endSegment);
+
+      // include points from minSegment to maxSegment (inclusive)
+      for (let i = minSegment; i <= maxSegment && i < coordinates.length; i++) {
+        const coord = coordinates[i];
+        routePath.push([coord[1], coord[0]]);
       }
 
-      // Find the closest building to the start
+      return routePath;
+    }
+
+    function calculateRouteWithCoords(startCoords, endName, startName) {
+      const matchingBuildings = buildings.filter(b => b.name === endName);
+      if (matchingBuildings.length === 0) { alert('Destination building not found.'); return; }
+
+      // Choose closest building instance if there are duplicates with same name
       let closestBuilding = matchingBuildings[0];
       let minDistance = Infinity;
       matchingBuildings.forEach(building => {
-        const distance = map.distance(L.latLng(startCoords), L.latLng(building.latitude, building.longitude));
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestBuilding = building;
-        }
+        const d = map.distance(L.latLng(startCoords), L.latLng(building.latitude, building.longitude));
+        if (d < minDistance) { minDistance = d; closestBuilding = building; }
       });
 
-      const endCoords = [closestBuilding.latitude, closestBuilding.longitude];
+      // Snap start & end to network
+      const snappedStart = snapToNearestPath(startCoords[0], startCoords[1]);
+      const snappedEnd = snapToNearestPath(closestBuilding.latitude, closestBuilding.longitude);
 
-      // Remove existing route
-      if (routingControl) {
-        map.removeControl(routingControl);
-      }
+      // Remove previous route visuals
+      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+      routeMarkers.forEach(m => map.removeLayer(m));
+      routeMarkers = [];
 
-      // Create routing control with OSRM
-      routingControl = L.Routing.control({
-        waypoints: [
-          L.latLng(startCoords),
-          L.latLng(endCoords)
-        ],
-        router: L.Routing.osrmv1({
-          serviceUrl: 'https://router.project-osrm.org/route/v1'
-        }),
-        routeWhileDragging: false,
-        addWaypoints: false,
-        showAlternatives: false,
-        fitSelectedRoutes: true,
-        lineOptions: {
-          styles: [
-            { 
-              color: '#6610F2', 
-              opacity: 0.8, 
-              weight: 6,
-              className: 'route-line'
-            }
-          ]
-        },
-        createMarker: function(i, waypoint, n) {
-          if (i === 0 && startCoords[0] !== waypoint.latLng.lat) {
-            // This is the user's current location
-            const icon = L.divIcon({
-              html: '🚶',
-              className: 'route-marker start-marker',
-              iconSize: [30, 30]
-            });
-            return L.marker(waypoint.latLng, {icon: icon}).bindPopup('Start Point');
-          } else {
-            // This is a building
-            const icon = L.divIcon({
-              html: i === 0 ? '🚶' : '📍',
-              className: 'route-marker',
-              iconSize: [30, 30]
-            });
-            return L.marker(waypoint.latLng, {icon: icon}).bindPopup(i === 0 ? 'Start' : 'Destination');
-          }
+      const routePath = calculateRouteAlongPaths(snappedStart[0], snappedStart[1], snappedEnd[0], snappedEnd[1]);
+
+      if (routePath.length > 0) {
+        // draw route polyline and keep reference
+        routeLayer = L.polyline(routePath, {
+          color: '#6610F2',
+          opacity: 0.9,
+          weight: 6,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(map);
+
+        // start marker
+        const startMarker = L.marker(L.latLng(snappedStart[0], snappedStart[1]), {
+          icon: L.divIcon({ html: '🚶', className: 'route-marker start-marker', iconSize: [30, 30] })
+        }).bindPopup('Start Point').addTo(map);
+
+        // end marker
+        const endMarker = L.marker(L.latLng(snappedEnd[0], snappedEnd[1]), {
+          icon: L.divIcon({ html: '📍', className: 'route-marker end-marker', iconSize: [30, 30] })
+        }).bindPopup('Destination: ' + endName).addTo(map);
+
+        routeMarkers.push(startMarker, endMarker);
+
+        // compute distance
+        let totalDistance = 0;
+        for (let i = 0; i < routePath.length - 1; i++) {
+          totalDistance += map.distance(L.latLng(routePath[i]), L.latLng(routePath[i + 1]));
         }
-      }).addTo(map);
 
-      // Handle route events
-      routingControl.on('routesfound', function(e) {
-        const routes = e.routes;
-        const route = routes[0];
+        // fit map
+        const group = L.featureGroup([L.latLng(snappedStart[0], snappedStart[1]), L.latLng(snappedEnd[0], snappedEnd[1])]);
+        map.fitBounds(group.getBounds().pad(0.12));
 
-        // Add to history
-        routeHistory.unshift({
-          start: startName,
-          end: endName,
-          distance: route.summary.totalDistance,
-          time: route.summary.totalTime
-        });
-        // Keep only last 5
-        if (routeHistory.length > 5) routeHistory.pop();
-
-        // Save to localStorage
+        // save history
+        routeHistory.unshift({ start: startName, end: endName, timestamp: new Date().toISOString(), distanceMeters: Math.round(totalDistance) });
         localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
-
-        // Display history in the panel
         displayHistory();
 
-        // Show directions panel
-        document.getElementById('directions-panel').style.display = 'block';
-      });
-
-      routingControl.on('routingerror', function(e) {
-        console.error('Routing error:', e.error);
-        alert('Unable to calculate route. Please try again.');
-      });
+      } else {
+        alert('Could not find a path between the selected locations.');
+      }
     }
 
-    // Recalculate a route from history
     function recalculateRoute(start, end) {
       document.getElementById('start-location').value = start;
       document.getElementById('end-location').value = end;
       calculateRoute();
     }
 
-    // Display route history
-    function displayHistory() {
-      const directionsElement = document.getElementById('directions-steps');
+    let _showAllHistory = false;
+    const HISTORY_LIMIT = 6;
 
-      if (routeHistory.length === 0) {
-        directionsElement.innerHTML = '<p>No recent routes.</p>';
+    function formatKm(meters) {
+      if (!meters && meters !== 0) return '';
+      const km = meters / 1000;
+      return km < 1 ? `${(meters/1000).toFixed(1)} km` : `${km.toFixed(1)} km`;
+    }
+
+    function estimateMinutes(meters) {
+      if (!meters && meters !== 0) return '';
+      // Rough walking estimate: 1 min per 100m (simple)
+      const mins = Math.max(1, Math.round(meters / 100));
+      return `${mins} min`;
+    }
+
+    function displayHistory() {
+      // Prefer the under-map recent routes container, then the map panel fallback, then the old directions-steps id.
+      const panelElement = document.getElementById('recent-routes') || document.getElementById('recent-routes-list') || document.getElementById('directions-steps');
+      const footerBtn = document.getElementById('show-more-btn');
+      if (!panelElement) return; // nothing to render into
+      if (!routeHistory || routeHistory.length === 0) {
+        panelElement.innerHTML = '<p style="color: rgba(255,255,255,0.85)">No recent routes.</p>';
+        if (footerBtn) footerBtn.style.display = 'none';
         return;
       }
 
-      let historyHTML = '<div class="history-list">';
+      const total = routeHistory.length;
+      const limit = _showAllHistory ? total : HISTORY_LIMIT;
+      const toRender = routeHistory.slice(0, limit);
 
-      routeHistory.forEach((item, index) => {
-        const distanceKm = (item.distance / 1000).toFixed(1);
-        const timeMin = Math.round(item.time / 60);
-        historyHTML += `
-          <div class="history-item" onclick="recalculateRoute('${item.start}', '${item.end}')">
-            <div class="history-route">${item.start} → ${item.end}</div>
-            <div class="history-details">${distanceKm} km • ${timeMin} min</div>
-          </div>
-        `;
+      let historyHTML = '';
+      toRender.forEach((item, idx) => {
+        const timeStr = new Date(item.timestamp).toLocaleString();
+        const distanceMeters = item.distanceMeters || 0;
+        const distanceLabel = formatKm(distanceMeters);
+        const minutesLabel = estimateMinutes(distanceMeters);
+        historyHTML += `<div class="history-item" onclick="recalculateRoute('${item.start}', '${item.end}')" role="button" tabindex="0">
+                          <div class="history-top">
+                            <div class="history-route">${item.start} → ${item.end}</div>
+                            <div class="history-meta"><span class="distance-badge">${distanceLabel}</span></div>
+                          </div>
+                          <div class="history-details">${minutesLabel} · ${timeStr}</div>
+                        </div>`;
       });
 
-      historyHTML += '</div>';
+      panelElement.innerHTML = historyHTML;
 
-      directionsElement.innerHTML = historyHTML;
-    }
-
-    // Get appropriate icon for direction type
-    function getDirectionIcon(step) {
-      const text = step.text.toLowerCase();
-      if (text.includes('left')) return '↰';
-      if (text.includes('right')) return '↱';
-      if (text.includes('straight')) return '↑';
-      if (text.includes('arrive')) return '📍';
-      if (text.includes('head') || text.includes('start')) return '🚶';
-      if (text.includes('roundabout')) return '🔄';
-      return '•';
-    }
-
-    // Clear current route
-    function clearRoute() {
-      if (routingControl) {
-        map.removeControl(routingControl);
-        routingControl = null;
-      }
-      
-      // Clear any custom route layers
-      map.eachLayer(layer => {
-        if (layer instanceof L.Polyline) {
-          map.removeLayer(layer);
+      // show/hide footer show-more button
+      if (footerBtn) {
+        if (total > HISTORY_LIMIT) {
+          footerBtn.style.display = 'inline-block';
+          footerBtn.textContent = _showAllHistory ? 'Show less' : `Show more (${total - HISTORY_LIMIT})`;
+        } else {
+          footerBtn.style.display = 'none';
         }
-      });
-      
-      // Keep history panel visible
-      document.getElementById('building-info').style.display = 'none';
-      
-      // Reset dropdowns but keep "current location" option
-      const startSelect = document.getElementById('start-location');
-      const endSelect = document.getElementById('end-location');
-      endSelect.value = '';
-      if (startSelect.value !== 'current') {
-        startSelect.value = '';
       }
     }
 
-    // Search for buildings
+    function clearHistory() {
+      if (!confirm('Clear all recent routes?')) return;
+      routeHistory = [];
+      localStorage.removeItem('routeHistory');
+      displayHistory();
+    }
+
+    function toggleShowMore() {
+      _showAllHistory = !_showAllHistory;
+      displayHistory();
+    }
+
+    function clearRoute(resetDropdowns = true) {
+      // Remove route visuals only (keep campus path)
+      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+      routeMarkers.forEach(m => map.removeLayer(m));
+      routeMarkers = [];
+
+      // hide building info
+      document.getElementById('building-info').style.display = 'none';
+
+      // reset selects
+      if (resetDropdowns) {
+        const startSelect = document.getElementById('start-location');
+        const endSelect = document.getElementById('end-location');
+        endSelect.value = '';
+        if (startSelect.value !== 'current') {
+          startSelect.value = '';
+        }
+      }
+    }
+
     function searchBuilding() {
-      const searchTerm = document.getElementById('search-input').value.toLowerCase();
-      const building = buildings.find(b => 
-        b.name.toLowerCase().includes(searchTerm) || 
-        b.description.toLowerCase().includes(searchTerm)
-      );
-      
+      const searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
+      if (!searchTerm) { alert('Enter a building name or description.'); return; }
+      const building = buildings.find(b => b.name.toLowerCase().includes(searchTerm) || (b.description && b.description.toLowerCase().includes(searchTerm)));
       if (building) {
         map.setView([building.latitude, building.longitude], 19);
         showBuildingInfo(building);
         selectedBuilding = building;
-        
-        // Open the marker's popup
+        // open corresponding marker popup
         markers.forEach(marker => {
-          const markerLatLng = marker.getLatLng();
-          if (markerLatLng.lat === building.latitude && markerLatLng.lng === building.longitude) {
+          const pos = marker.getLatLng();
+          if (Math.abs(pos.lat - building.latitude) < 1e-6 && Math.abs(pos.lng - building.longitude) < 1e-6) {
             marker.openPopup();
           }
         });
@@ -603,30 +573,33 @@
       }
     }
 
-    // Get user's current location
     function getUserLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            const userCoords = [position.coords.latitude, position.coords.longitude];
-            
+        navigator.geolocation.getCurrentPosition(position => {
+          const userCoords = [position.coords.latitude, position.coords.longitude];
+          if (userMarker) {
+            userMarker.setLatLng(userCoords);
+          } else {
             userMarker = L.marker(userCoords, {
-              icon: L.divIcon({
-                html: '📍',
-                className: 'user-marker',
-                iconSize: [30, 30]
-              })
+              icon: L.divIcon({ html: '📍', className: 'user-marker', iconSize: [30, 30] })
             }).addTo(map).bindPopup('You are here!');
-          },
-          error => {
-            console.log('Geolocation not available or permission denied');
           }
-        );
+        }, error => {
+          console.log('Geolocation not available or permission denied', error);
+        });
       }
     }
 
-    // Initialize map when page loads
-    window.onload = initMap;
+    // init on DOM ready: initialize map and wire recent-routes controls
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      // wire clear and show more buttons
+      const clearBtn = document.getElementById('clear-history');
+      if (clearBtn) clearBtn.addEventListener('click', clearHistory);
+      const showMoreBtn = document.getElementById('show-more-btn');
+      if (showMoreBtn) showMoreBtn.addEventListener('click', toggleShowMore);
+      displayHistory();
+    });
   </script>
 </body>
 </html>
