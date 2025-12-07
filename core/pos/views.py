@@ -75,8 +75,22 @@ def profile_view(request):
         profile_picture = request.FILES.get('profile_picture')
         if profile_picture:
             profile, created = Profile.objects.get_or_create(user=request.user)
-            profile.profile_picture = profile_picture
+
+            # Read the file and encode as base64
+            import base64
+            from django.core.files.base import ContentFile
+
+            # Read file content
+            file_content = profile_picture.read()
+
+            # Encode to base64
+            encoded_image = base64.b64encode(file_content).decode('utf-8')
+
+            # Store in database
+            profile.profile_picture_data = f"data:{profile_picture.content_type};base64,{encoded_image}"
+            profile.profile_picture_name = profile_picture.name
             profile.save()
+
             messages.success(request, 'Profile picture updated successfully!')
         return redirect('profile')
     return render(request, 'pos/profile.html')

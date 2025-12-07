@@ -18,3 +18,9 @@ services:
         value: "*"
       - key: DATABASE_URL
         value: postgresql://postgres:[YOUR_PASSWORD]@db.nvldqqitjevixdcoxgnu.supabase.co:5432/postgres
+      - key: CLOUDINARY_CLOUD_NAME
+        value: "your-cloudinary-cloud-name"
+      - key: CLOUDINARY_API_KEY
+        value: "your-cloudinary-api-key"
+      - key: CLOUDINARY_API_SECRET
+        value: "your-cloudinary-api-secret"

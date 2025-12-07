@@ -6,6 +6,8 @@ from django.dispatch import receiver
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture_data = models.TextField(blank=True, null=True)  # Store base64 encoded image
+    profile_picture_name = models.CharField(max_length=255, blank=True, null=True)  # Store original filename
 
     def __str__(self):
         return f"{self.user.username}'s profile"

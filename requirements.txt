@@ -6,3 +6,6 @@ psycopg[binary]>=3.2
 python-dotenv>=1.0
 Pillow
 django-leaflet>=0.30
+django-storages[boto3]>=1.14
+boto3>=1.28
+cloudinary>=1.36.0
