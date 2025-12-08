@@ -94,7 +94,7 @@
           <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
               <div style="font-weight: 600; color: #495057;">${alert.user}</div>
-              <div style="color: #6c757d; font-size: 12px;">${formatTime(alert.timestamp)}</div>
+              <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${alert.formatted_time}</span>
             </div>
             <div style="font-size: 14px; color: ${color}; margin-bottom: 8px; font-weight: 500;">${alert.alert_type}</div>
             <div style="font-size: 16px; color: #495057; margin-bottom: 8px; font-weight: 500;">${alert.location || 'Safety Alert'}</div>
@@ -142,31 +142,43 @@
       document.getElementById('email-modal').style.display = 'none';
     }
 
-    function formatTime(timestamp) {
-      // Show a human-friendly relative time (minutes, hours, days) and fall back to local date
-      if (!timestamp) return '';
-      const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return timestamp;
-      const now = new Date();
-      const diffMs = now - date;
-      const seconds = Math.floor(diffMs / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const hours = Math.floor(minutes / 60);
-      const days = Math.floor(hours / 24);
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
 
-      if (seconds < 10) return 'Just now';
-      if (seconds < 60) return `${seconds}s ago`;
-      if (minutes < 60) return `${minutes}m ago`;
-      if (hours < 24) return `${hours}h ago`;
-      if (days < 7) return `${days}d ago`;
-      // older than a week: show a concise local date/time
-      return date.toLocaleString();
+      if (seconds < 60) return "just now";
+
+      const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60
+      };
+
+      for (const interval in intervals) {
+        const count = Math.floor(seconds / intervals[interval]);
+        if (count > 0) {
+          return count === 1
+            ? `1 ${interval} ago`
+            : `${count} ${interval}s ago`;
+        }
+      }
+    }
+
+    function updateTimes() {
+      document.querySelectorAll(".time-ago").forEach(el => {
+        const time = el.getAttribute("data-time");
+        el.textContent = timeAgo(time);
+      });
     }
 
     // Load alerts on page load and refresh every 30 seconds
     window.onload = function() {
       loadActiveAlerts();
       setInterval(loadActiveAlerts, 30000);
+      // Update timestamps every minute
+      setInterval(updateTimes, 60000);
     };
   </script>
 </body>

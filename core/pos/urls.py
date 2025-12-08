@@ -22,6 +22,8 @@ urlpatterns = [
     path('send-alert/', views.send_alert_view, name='send_alert'),
     path('get-alerts/', views.get_alerts_view, name='get_alerts'),
     path('get-unread-alerts/', views.get_unread_alerts_count, name='get_unread_alerts'),
+    path('get-users/', views.get_users_view, name='get_users'),
+    path('share-location/', views.share_location_view, name='share_location'),
     path('safety/', views.safety_view, name='safety'),
     path('notifications/', views.notifications_view, name='notifications'),
 ]

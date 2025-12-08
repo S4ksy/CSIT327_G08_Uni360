@@ -9,18 +9,9 @@
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Leaflet Routing Machine CSS (not used for custom path routing but kept if you need it later) -->
+  <!-- Leaflet Routing Machine CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
-  <style>
-    /* Ensure the map has a visible height (move this to your CSS if you prefer) */
-    #map { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
-    .custom-marker { line-height: 0; }
-    .user-marker { font-size: 20px; }
-    .route-marker { font-size: 18px; }
-    .history-item { cursor: pointer; padding: 6px 0; border-bottom: 1px solid #eee; }
-    .controls-panel { margin-bottom: 12px; }
-  </style>
 </head>
 <body>
   <div class="sidebar">
@@ -64,8 +55,11 @@
         <select id="end-location">
           <option value="">Select destination...</option>
         </select>
-        <button onclick="calculateRoute()">🚶 Get Directions</button>
+        <button id="calculate-route-btn" onclick="calculateRoute()" disabled>🚶 Get Directions</button>
         <button onclick="clearRoute()">✖️ Clear Route</button>
+      </div>
+      <div class="share-location-controls" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+        <button onclick="openShareLocationModal()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px;">📍 Share Location</button>
       </div>
     </div>
 
@@ -78,50 +72,81 @@
       <p id="building-description"></p>
       <button onclick="setAsDestination()" class="btn-primary">Set as Destination</button>
     </div>
-    <!-- Recent Routes shown under the map -->
-    <div id="recent-routes-section" class="recent-routes-section">
+    
+    <!-- Recent Routes shown under the map - FORCE LEFT ALIGNMENT -->
+    <div id="recent-routes-section" class="recent-routes-section" 
+         style="margin-left: 0; margin-right: auto; padding-left: 0; width: 100%; text-align: left; margin-top: 30px;">
       <div class="recent-routes-header">
         <h3>📍 Recent Routes</h3>
         <div class="recent-routes-actions">
           <button id="clear-history" class="clear-history" title="Clear recent routes">Clear</button>
         </div>
       </div>
-      <div id="recent-routes" class="recent-routes" aria-live="polite">
+      <div id="recent-routes" class="recent-routes" aria-live="polite"
+           style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: flex-start; margin-left: 0; margin-right: auto;">
         <!-- Filled by displayHistory() -->
       </div>
-      <div id="recent-routes-footer" class="recent-routes-footer">
+      <div id="recent-routes-footer" class="recent-routes-footer" style="margin-top: 20px; display: flex; justify-content: flex-start;">
         <button id="show-more-btn" class="show-more" style="display:none">Show more</button>
       </div>
     </div>
   </div>
 
+  <!-- Share Location Modal -->
+  <div id="share-location-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+    <div style="background: white; color: #333; padding: 20px; border-radius: 12px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+      {% csrf_token %}
+      <h3 style="margin: 0 0 15px 0; color: #333;">📍 Share Your Location</h3>
+      <p style="margin: 0 0 15px 0; color: #666;">Select users to share your current location with:</p>
+
+      <div id="users-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
+        <!-- Users will be loaded here -->
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button onclick="closeShareLocationModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
+        <button onclick="shareLocation()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Share Location</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Shared Success Modal -->
+  <div id="location-shared-success-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1001; justify-content: center; align-items: center;">
+    <div style="background: white; color: #333; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+      <h3 style="margin: 0 0 15px 0; color: #28a745;">Location Shared Successfully!</h3>
+      <p style="margin: 0 0 25px 0; color: #666;">Your location has been shared with the selected users.</p>
+      <button onclick="closeLocationSharedSuccessModal()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">OK</button>
+    </div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- Leaflet Routing Machine (optional) -->
+  <!-- Leaflet Routing Machine -->
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
   <script>
     // CIT-U Campus buildings
     const buildings = [
-      { name: "NGE Building", description: "Administration and main classrooms", latitude: 10.2944, longitude: 123.8811, color: "#6610F2" },
-      { name: "GLE Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8812, color: "#6610F2" },
-      { name: "ACAD Building", description: "Administration and main classrooms", latitude: 10.29575, longitude: 123.8810, color: "#6610F2" },
-      { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2948, longitude: 123.8801, color: "#6610F2" },
-      { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2949, longitude: 123.8809, color: "#6610F2" },
-      { name: "SAL Building", description: "Administration and main classrooms", latitude: 10.2954, longitude: 123.8800, color: "#6610F2" },
-      { name: "ALLIED 1st Building Building", description: "Administration and main classrooms", latitude: 10.2958, longitude: 123.8795, color: "#6610F2" },
-      { name: "ALLIED 2nd Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8797, color: "#6610F2" },
-      { name: "ALLIED 3rd Building", description: "Administration and main classrooms", latitude: 10.2947, longitude: 123.8799, color: "#6610F2" },
-      { name: "Library", description: "Main campus library with study areas", latitude: 10.29527, longitude: 123.88078, color: "#2EC4B6", type: "library" },
-      { name: "Main Canteen", description: "Cafeteria and student activities", latitude: 10.29619, longitude: 123.8805, color: "#FF6B6B", type: "cafeteria" },
-      { name: "GYM Canteen", description: "Cafeteria and student activities", latitude: 10.2965, longitude: 123.8798, color: "#FF6B6B", type: "cafeteria" },
-      { name: "Gymnasium", description: "Sports facilities and gym", latitude: 10.2963, longitude: 123.8795, color: "#E71D36", type: "sports" },
-      { name: "NGE Parking Area", description: "Student and faculty parking", latitude: 10.2944, longitude: 123.8805, color: "#7B68EE", type: "parking" },
-      { name: "RTL Parking Area", description: "Student and faculty parking", latitude: 10.2947, longitude: 123.8805, color: "#7B68EE", type: "parking" },
-      { name: "GLE Parking Area", description: "Student and faculty parking", latitude: 10.2952, longitude: 123.8810, color: "#7B68EE", type: "parking" },
-      { name: "Espacio Parking Area", description: "Student and faculty parking", latitude: 10.2958, longitude: 123.8805, color: "#7B68EE", type: "parking" },
-      { name: "Back Gate Parking Area", description: "Student and faculty parking", latitude: 10.2968, longitude: 123.8800, color: "#7B68EE", type: "parking" }
-    ];
+       { name: "NGE Building", description: "Administration and main classrooms", latitude: 10.2944, longitude: 123.8811, color: "#6610F2" },
+       { name: "GLE Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8812, color: "#6610F2" },
+       { name: "ACAD Building", description: "Administration and main classrooms", latitude: 10.29575, longitude: 123.8810, color: "#6610F2" },
+       { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2948, longitude: 123.8801, color: "#6610F2" },
+       { name: "RTL Building", description: "Administration and main classrooms", latitude: 10.2949, longitude: 123.8809, color: "#6610F2" },
+       { name: "SAL Building", description: "Administration and main classrooms", latitude: 10.2954, longitude: 123.8800, color: "#6610F2" },
+       { name: "ALLIED 1st Building", description: "Administration and main classrooms", latitude: 10.2958, longitude: 123.8795, color: "#6610F2" },
+       { name: "ALLIED 2nd Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8797, color: "#6610F2" },
+       { name: "ALLIED 3rd Building", description: "Administration and main classrooms", latitude: 10.2947, longitude: 123.8799, color: "#6610F2" },
+       { name: "Library", description: "Main campus library with study areas", latitude: 10.29527, longitude: 123.88078, color: "#2EC4B6", type: "library" },
+       { name: "Main Canteen", description: "Cafeteria and student activities", latitude: 10.29619, longitude: 123.8805, color: "#FF6B6B", type: "cafeteria" },
+       { name: "GYM Canteen", description: "Cafeteria and student activities", latitude: 10.2965, longitude: 123.8798, color: "#FF6B6B", type: "cafeteria" },
+       { name: "Gymnasium", description: "Sports facilities and gym", latitude: 10.2963, longitude: 123.8795, color: "#E71D36", type: "sports" },
+       { name: "NGE Parking Area", description: "Student and faculty parking", latitude: 10.2944, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+       { name: "RTL Parking Area", description: "Student and faculty parking", latitude: 10.2947, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+       { name: "GLE Parking Area", description: "Student and faculty parking", latitude: 10.2952, longitude: 123.8810, color: "#7B68EE", type: "parking" },
+       { name: "Espacio Parking Area", description: "Student and faculty parking", latitude: 10.2958, longitude: 123.8805, color: "#7B68EE", type: "parking" },
+       { name: "Back Gate Parking Area", description: "Student and faculty parking", latitude: 10.2968, longitude: 123.8800, color: "#7B68EE", type: "parking" }
+     ];
 
     // Building type to icon mapping
     const buildingIcons = {
@@ -139,11 +164,9 @@
     let routingControl = null;
     let userMarker = null;
     let routeHistory = JSON.parse(localStorage.getItem('routeHistory')) || [];
-    let campusPathNetwork = null;
 
-    // Layers we manage separately
-    let campusLayer = null;         // the campus path network polyline (keep)
-    let routeLayer = null;          // polyline for the currently drawn route (remove cleanly)
+    // Layers we manage
+    let routeLayer = null;          // polyline for the currently drawn route
     let routeMarkers = [];          // markers placed for the route (start/end)
     
     // Haversine distance (meters)
@@ -158,63 +181,6 @@
       return R * c;
     }
 
-    function snapToNearestPath(lat, lon) {
-      if (!campusPathNetwork) return [lat, lon];
-
-      const coordinates = campusPathNetwork.geometry.coordinates;
-      let nearestPoint = [lat, lon];
-      let nearestDistance = Infinity;
-
-      for (let i = 0; i < coordinates.length - 1; i++) {
-        const p1 = coordinates[i];
-        const p2 = coordinates[i + 1];
-
-        // project point onto segment (p1,p2). coordinates are [lon, lat]
-        const denom = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) || 1e-9;
-        const t = Math.max(0, Math.min(1, ((lon - p1[0]) * (p2[0] - p1[0]) + (lat - p1[1]) * (p2[1] - p1[1])) / denom));
-
-        const projectedLat = p1[1] + t * (p2[1] - p1[1]);
-        const projectedLon = p1[0] + t * (p2[0] - p1[0]);
-
-        const distance = calculateDistance(lat, lon, projectedLat, projectedLon);
-        if (distance < nearestDistance) {
-          nearestDistance = distance;
-          nearestPoint = [projectedLat, projectedLon];
-        }
-      }
-
-      return nearestPoint;
-    }
-
-    function loadCampusPathNetwork() {
-      fetch('{% static "pos/campus.json" %}')
-        .then(response => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        })
-        .then(data => {
-          if (data.features && data.features.length > 0) {
-            campusPathNetwork = data.features[0];
-            console.log('Campus path network loaded');
-
-            if (campusPathNetwork.geometry && campusPathNetwork.geometry.type === 'LineString') {
-              const pathCoordinates = campusPathNetwork.geometry.coordinates.map(c => [c[1], c[0]]);
-              campusLayer = L.polyline(pathCoordinates, {
-                color: '#FF6B35',
-                weight: 3,
-                opacity: 0.8,
-                dashArray: '5, 5',
-                lineCap: 'round',
-                lineJoin: 'round'
-              }).addTo(map);
-            }
-          } else {
-            console.warn('Campus path network is empty or malformed');
-          }
-        })
-        .catch(err => console.error('Error loading campus path network:', err));
-    }
-
     function initMap() {
       map = L.map('map').setView([10.2950, 123.8810], 17.5);
 
@@ -223,11 +189,13 @@
         maxZoom: 19
       }).addTo(map);
 
-      loadCampusPathNetwork();
       populateBuildingSelects();
       addBuildingMarkers();
       getUserLocation();
       displayHistory();
+
+      // Enable routing button immediately
+      document.getElementById('calculate-route-btn').disabled = false;
 
       // Restore selectedRoute if dashboard pushed one
       const selectedRoute = JSON.parse(localStorage.getItem('selectedRoute'));
@@ -247,7 +215,7 @@
         const icon = buildingIcons[building.type] || buildingIcons.default;
         const customIcon = L.divIcon({
           className: 'custom-marker',
-          html: `<div style="background: ${building.color}; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 16px;">${icon}</div>`,
+          html: `<div style="background: ${building.color}; color: whita; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 16px;">${icon}</div>`,
           iconSize: [35, 35]
         });
 
@@ -349,46 +317,25 @@
       }
     }
 
-    function findSegmentIndex(lat, lon) {
-      if (!campusPathNetwork) return -1;
-      const coordinates = campusPathNetwork.geometry.coordinates;
-      let minDistance = Infinity;
-      let segmentIndex = -1;
+    function calculateRouteBetweenPoints(startCoords, endCoords) {
+      // Use Leaflet Routing Machine for road-based routing
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
 
-      for (let i = 0; i < coordinates.length - 1; i++) {
-        const p1 = coordinates[i];
-        const p2 = coordinates[i + 1];
-        const denom = ((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2) || 1e-9;
-        const t = Math.max(0, Math.min(1, ((lon - p1[0]) * (p2[0] - p1[0]) + (lat - p1[1]) * (p2[1] - p1[1])) / denom));
-        const projectedLat = p1[1] + t * (p2[1] - p1[1]);
-        const projectedLon = p1[0] + t * (p2[0] - p1[0]);
-        const distance = calculateDistance(lat, lon, projectedLat, projectedLon);
-        if (distance < minDistance) {
-          minDistance = distance;
-          segmentIndex = i;
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(startCoords[0], startCoords[1]),
+          L.latLng(endCoords[0], endCoords[1])
+        ],
+        routeWhileDragging: false,
+        createMarker: function() { return null; }, // We'll add our own markers
+        lineOptions: {
+          styles: [{ color: '#6610F2', opacity: 0.9, weight: 6 }]
         }
-      }
-      return segmentIndex;
-    }
+      }).addTo(map);
 
-    function calculateRouteAlongPaths(startLat, startLon, endLat, endLon) {
-      if (!campusPathNetwork) return [];
-      const coordinates = campusPathNetwork.geometry.coordinates;
-      const startSegment = findSegmentIndex(startLat, startLon);
-      const endSegment = findSegmentIndex(endLat, endLon);
-      if (startSegment === -1 || endSegment === -1) return [];
-
-      const routePath = [];
-      const minSegment = Math.min(startSegment, endSegment);
-      const maxSegment = Math.max(startSegment, endSegment);
-
-      // include points from minSegment to maxSegment (inclusive)
-      for (let i = minSegment; i <= maxSegment && i < coordinates.length; i++) {
-        const coord = coordinates[i];
-        routePath.push([coord[1], coord[0]]);
-      }
-
-      return routePath;
+      return []; // Routing control handles the display
     }
 
     function calculateRouteWithCoords(startCoords, endName, startName) {
@@ -403,57 +350,57 @@
         if (d < minDistance) { minDistance = d; closestBuilding = building; }
       });
 
-      // Snap start & end to network
-      const snappedStart = snapToNearestPath(startCoords[0], startCoords[1]);
-      const snappedEnd = snapToNearestPath(closestBuilding.latitude, closestBuilding.longitude);
-
       // Remove previous route visuals
-      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
       routeMarkers.forEach(m => map.removeLayer(m));
       routeMarkers = [];
 
-      const routePath = calculateRouteAlongPaths(snappedStart[0], snappedStart[1], snappedEnd[0], snappedEnd[1]);
-
-      if (routePath.length > 0) {
-        // draw route polyline and keep reference
-        routeLayer = L.polyline(routePath, {
-          color: '#6610F2',
-          opacity: 0.9,
-          weight: 6,
-          lineCap: 'round',
-          lineJoin: 'round'
-        }).addTo(map);
-
-        // start marker
-        const startMarker = L.marker(L.latLng(snappedStart[0], snappedStart[1]), {
-          icon: L.divIcon({ html: '🚶', className: 'route-marker start-marker', iconSize: [30, 30] })
-        }).bindPopup('Start Point').addTo(map);
-
-        // end marker
-        const endMarker = L.marker(L.latLng(snappedEnd[0], snappedEnd[1]), {
-          icon: L.divIcon({ html: '📍', className: 'route-marker end-marker', iconSize: [30, 30] })
-        }).bindPopup('Destination: ' + endName).addTo(map);
-
-        routeMarkers.push(startMarker, endMarker);
-
-        // compute distance
-        let totalDistance = 0;
-        for (let i = 0; i < routePath.length - 1; i++) {
-          totalDistance += map.distance(L.latLng(routePath[i]), L.latLng(routePath[i + 1]));
+      // Create routing control
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(startCoords[0], startCoords[1]),
+          L.latLng(closestBuilding.latitude, closestBuilding.longitude)
+        ],
+        routeWhileDragging: false,
+        createMarker: function() { return null; }, // We'll add our own markers
+        lineOptions: {
+          styles: [{ color: '#6610F2', opacity: 0.9, weight: 6 }]
         }
+      }).addTo(map);
 
-        // fit map
-        const group = L.featureGroup([L.latLng(snappedStart[0], snappedStart[1]), L.latLng(snappedEnd[0], snappedEnd[1])]);
-        map.fitBounds(group.getBounds().pad(0.12));
+      // Add custom markers
+      const startMarker = L.marker(L.latLng(startCoords[0], startCoords[1]), {
+        icon: L.divIcon({ html: '🚶', className: 'route-marker start-marker', iconSize: [30, 30] })
+      }).bindPopup('Start Point').addTo(map);
+
+      const endMarker = L.marker(L.latLng(closestBuilding.latitude, closestBuilding.longitude), {
+        icon: L.divIcon({ html: '📍', className: 'route-marker end-marker', iconSize: [30, 30] })
+      }).bindPopup('Destination: ' + endName).addTo(map);
+
+      routeMarkers.push(startMarker, endMarker);
+
+      // Get route information when routing is complete
+      routingControl.on('routesfound', function(e) {
+        const routes = e.routes;
+        const route = routes[0];
+        const totalDistance = route.summary.totalDistance; // in meters
+
+        // fit map to route bounds
+        const bounds = L.latLngBounds(route.coordinates);
+        map.fitBounds(bounds.pad(0.1));
 
         // save history
-        routeHistory.unshift({ start: startName, end: endName, timestamp: new Date().toISOString(), distanceMeters: Math.round(totalDistance) });
+        routeHistory.unshift({
+          start: startName,
+          end: endName,
+          timestamp: new Date().toISOString(),
+          distanceMeters: Math.round(totalDistance)
+        });
         localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
         displayHistory();
-
-      } else {
-        alert('Could not find a path between the selected locations.');
-      }
+      });
     }
 
     function recalculateRoute(start, end) {
@@ -479,10 +426,10 @@
     }
 
     function displayHistory() {
-      // Prefer the under-map recent routes container, then the map panel fallback, then the old directions-steps id.
-      const panelElement = document.getElementById('recent-routes') || document.getElementById('recent-routes-list') || document.getElementById('directions-steps');
+      const panelElement = document.getElementById('recent-routes');
       const footerBtn = document.getElementById('show-more-btn');
-      if (!panelElement) return; // nothing to render into
+      if (!panelElement) return;
+      
       if (!routeHistory || routeHistory.length === 0) {
         panelElement.innerHTML = '<p style="color: rgba(255,255,255,0.85)">No recent routes.</p>';
         if (footerBtn) footerBtn.style.display = 'none';
@@ -499,10 +446,11 @@
         const distanceMeters = item.distanceMeters || 0;
         const distanceLabel = formatKm(distanceMeters);
         const minutesLabel = estimateMinutes(distanceMeters);
-        historyHTML += `<div class="history-item" onclick="recalculateRoute('${item.start}', '${item.end}')" role="button" tabindex="0">
+        historyHTML += `<div class="history-item" onclick="recalculateRoute('${item.start}', '${item.end}')" role="button" tabindex="0" style="background: rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); color: white; transition: transform 0.12s ease, box-shadow 0.12s ease; width: 100%; max-width: 300px; cursor: pointer; text-align: left; border: 1px solid rgba(255,255,255,0.1);">
                           <div class="history-top">
                             <div class="history-route">${item.start} → ${item.end}</div>
-                            <div class="history-meta"><span class="distance-badge">${distanceLabel}</span></div>
+                            <div class="history-meta"><span class="distance-badge">${distanceLabel}</span>
+                            <button onclick="event.stopPropagation(); deleteRoute(${idx})" class="delete-route-btn" title="Delete this route">🗑️</button></div>
                           </div>
                           <div class="history-details">${minutesLabel} · ${timeStr}</div>
                         </div>`;
@@ -528,14 +476,24 @@
       displayHistory();
     }
 
+    function deleteRoute(idx) {
+      if (!confirm('Delete this recent route?')) return;
+      routeHistory.splice(idx, 1);
+      localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
+      displayHistory();
+    }
+
     function toggleShowMore() {
       _showAllHistory = !_showAllHistory;
       displayHistory();
     }
 
     function clearRoute(resetDropdowns = true) {
-      // Remove route visuals only (keep campus path)
-      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+      // Remove route visuals
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
       routeMarkers.forEach(m => map.removeLayer(m));
       routeMarkers = [];
 
@@ -590,10 +548,117 @@
       }
     }
 
-    // init on DOM ready: initialize map and wire recent-routes controls
+    function openShareLocationModal() {
+      const modal = document.getElementById('share-location-modal');
+      modal.style.display = 'flex';
+      loadUsers();
+    }
+
+    function closeShareLocationModal() {
+      const modal = document.getElementById('share-location-modal');
+      modal.style.display = 'none';
+    }
+
+    function closeLocationSharedSuccessModal() {
+      const modal = document.getElementById('location-shared-success-modal');
+      modal.style.display = 'none';
+    }
+
+    function loadUsers() {
+      fetch('/get-users/', {
+        credentials: 'same-origin'
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const usersList = document.getElementById('users-list');
+          usersList.innerHTML = '';
+
+          if (data.users.length === 0) {
+            usersList.innerHTML = '<p>No other users found.</p>';
+            return;
+          }
+
+          data.users.forEach(user => {
+            const userDiv = document.createElement('div');
+            userDiv.style.display = 'flex';
+            userDiv.style.alignItems = 'center';
+            userDiv.style.marginBottom = '10px';
+            userDiv.style.padding = '10px';
+            userDiv.style.border = '1px solid #ddd';
+            userDiv.style.borderRadius = '8px';
+
+            userDiv.innerHTML = `
+              <label for="user-${user.id}" style="margin: 0; cursor: pointer; flex: 1;">
+                <strong>${user.full_name || 'No name'}</strong> (${user.school_id || 'No ID'})
+              </label>
+              <input type="checkbox" id="user-${user.id}" value="${user.id}" style="margin-left: 10px;">
+            `;
+
+            usersList.appendChild(userDiv);
+          });
+        })
+        .catch(error => {
+          console.error('Error loading users:', error);
+          document.getElementById('users-list').innerHTML = '<p>Error loading users.</p>';
+        });
+    }
+
+    function shareLocation() {
+      const selectedUsers = Array.from(document.querySelectorAll('#users-list input[type="checkbox"]:checked'))
+        .map(checkbox => parseInt(checkbox.value));
+
+      if (selectedUsers.length === 0) {
+        alert('Please select at least one user to share your location with.');
+        return;
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          fetch('/share-location/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+              latitude: latitude,
+              longitude: longitude,
+              recipients: selectedUsers
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.status === 'success') {
+              closeShareLocationModal();
+              const successModal = document.getElementById('location-shared-success-modal');
+              successModal.style.display = 'flex';
+            } else {
+              alert('Error sharing location: ' + data.message);
+            }
+          })
+          .catch(error => {
+            console.error('Error sharing location:', error);
+            alert('Error sharing location. Please try again.');
+          });
+        }, () => {
+          alert('Unable to get your location. Please enable location services and try again.');
+        });
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    // init on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
-      // wire clear and show more buttons
       const clearBtn = document.getElementById('clear-history');
       if (clearBtn) clearBtn.addEventListener('click', clearHistory);
       const showMoreBtn = document.getElementById('show-more-btn');

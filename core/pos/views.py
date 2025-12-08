@@ -56,8 +56,14 @@ def signup_view(request):
             return render(request, 'pos/signup.html', {'error': error})
 
         # Create the user
-        user = User.objects.create_user(username=full_name, email=student_email.lower(), password=password)
+        user = User.objects.create_user(username=student_id, email=student_email.lower(), password=password)
         user.save()
+
+        # Save full_name and school_id to profile
+        profile = user.profile
+        profile.full_name = full_name
+        profile.school_id = student_id
+        profile.save()
 
         return redirect('login')
 
@@ -72,26 +78,68 @@ def dashboard(request):
 @login_required
 def profile_view(request):
     if request.method == 'POST':
-        profile_picture = request.FILES.get('profile_picture')
-        if profile_picture:
-            profile, created = Profile.objects.get_or_create(user=request.user)
+        action = request.POST.get('action')
+        if action == 'update_picture':
+            profile_picture = request.FILES.get('profile_picture')
+            if profile_picture:
+                profile, created = Profile.objects.get_or_create(user=request.user)
 
-            # Read the file and encode as base64
-            import base64
-            from django.core.files.base import ContentFile
+                # Read the file and encode as base64
+                import base64
+                from django.core.files.base import ContentFile
 
-            # Read file content
-            file_content = profile_picture.read()
+                # Read file content
+                file_content = profile_picture.read()
 
-            # Encode to base64
-            encoded_image = base64.b64encode(file_content).decode('utf-8')
+                # Encode to base64
+                encoded_image = base64.b64encode(file_content).decode('utf-8')
 
-            # Store in database
-            profile.profile_picture_data = f"data:{profile_picture.content_type};base64,{encoded_image}"
-            profile.profile_picture_name = profile_picture.name
-            profile.save()
+                # Store in database
+                profile.profile_picture_data = f"data:{profile_picture.content_type};base64,{encoded_image}"
+                profile.profile_picture_name = profile_picture.name
+                profile.save()
 
-            messages.success(request, 'Profile picture updated successfully!')
+                messages.success(request, 'Profile picture updated successfully!')
+        elif action == 'update_school_id':
+            student_id = request.POST.get('student_id')
+            if student_id:
+                import re
+                student_id_pattern = r'^\d{2}-\d{4}-\d{3}$'
+                if re.match(student_id_pattern, student_id):
+                    profile, created = Profile.objects.get_or_create(user=request.user)
+                    profile.school_id = student_id
+                    profile.save()
+                    # Check if request is AJAX
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'success': True, 'message': 'Student ID updated successfully!'})
+                    messages.success(request, 'Student ID updated successfully!')
+                else:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'success': False, 'error': 'Invalid Student ID format. Use 23-6555-528'})
+                    messages.error(request, 'Invalid Student ID format. Use 23-6555-528')
+        elif action == 'change_password':
+            current_password = request.POST.get('current_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if not request.user.check_password(current_password):
+                messages.error(request, 'Current password is incorrect.')
+            elif new_password != confirm_password:
+                messages.error(request, 'New passwords do not match.')
+            elif len(new_password) < 8:
+                messages.error(request, 'New password must be at least 8 characters long.')
+            else:
+                request.user.set_password(new_password)
+                request.user.save()
+                messages.success(request, 'Password changed successfully! Please log in again with your new password.')
+                logout(request)
+                return redirect('/login/')
+        elif action == 'delete_profile':
+            # Delete the user account
+            request.user.delete()
+            logout(request)
+            messages.success(request, 'Your account has been deleted successfully.')
+            return redirect('home')
         return redirect('profile')
     return render(request, 'pos/profile.html')
 
@@ -118,21 +166,6 @@ def about_view(request):
 # -----------------------------
 # CAMPUS NAVIGATION VIEWS
 # -----------------------------
-
-@login_required
-def map_view(request):
-    buildings = Building.objects.all()
-    buildings_data = [
-        {
-            'name': building.name,
-            'description': building.description,
-            'latitude': building.latitude,
-            'longitude': building.longitude,
-        }
-        for building in buildings
-    ]
-    return render(request, 'pos/map.html', {'buildings': json.dumps(buildings_data)})
-
 
 # -----------------------------
 # SAFETY ALERT VIEWS
@@ -173,16 +206,20 @@ def get_alerts_view(request):
 
     recent_alerts = Alert.objects.filter(
         timestamp__gte=timezone.now() - timedelta(hours=24)
-    ).order_by('-timestamp')[:10]  # Last 10 alerts
+    ).exclude(
+        alert_type='location_share',
+        user=request.user
+    ).order_by('-timestamp')[:10]  # Last 10 alerts, excluding location shares sent by current user
 
     alerts_data = [
         {
             'id': alert.id,
-            'user': alert.user.username,
+            'user': getattr(alert.user.profile, 'full_name', alert.user.username),
             'alert_type': alert.get_alert_type_display(),
             'location': alert.location,
             'message': alert.message,
-            'timestamp': alert.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'timestamp': alert.timestamp.isoformat(),
+            'formatted_time': timezone.localtime(alert.timestamp).strftime('%I:%M %p').lower(),
             'is_read': request.user in alert.read_by.all()
         }
         for alert in recent_alerts
@@ -205,6 +242,53 @@ def get_unread_alerts_count(request):
     ).exclude(read_by=request.user).count()
 
     return JsonResponse({'unread_count': unread_count})
+
+
+@login_required
+def get_users_view(request):
+    users = User.objects.exclude(id=request.user.id).select_related('profile')
+    users_data = [
+        {
+            'id': user.id,
+            'username': user.username,
+            'full_name': getattr(user.profile, 'full_name', user.username),
+            'school_id': getattr(user.profile, 'school_id', ''),
+        }
+        for user in users
+    ]
+    return JsonResponse({'users': users_data})
+
+
+@login_required
+def share_location_view(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        recipients = data.get('recipients', [])
+
+        if not latitude or not longitude or not recipients:
+            return JsonResponse({'status': 'error', 'message': 'Missing required data'}, status=400)
+
+        try:
+            # Create location share alerts for each recipient
+            for recipient_id in recipients:
+                recipient = User.objects.get(id=recipient_id)
+                Alert.objects.create(
+                    user=request.user,
+                    alert_type='location_share',
+                    location=f"{latitude},{longitude}",
+                    message=f"{request.user.profile.full_name} shared their location with you"
+                )
+
+            return JsonResponse({'status': 'success', 'message': 'Location shared successfully'})
+        except User.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'One or more recipients not found'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
 # -----------------------------
