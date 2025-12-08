@@ -17,7 +17,7 @@
       <a href="#" class="active">🏠 Dashboard</a>
       <a href="{% url 'map' %}">🗺️ Campus Map</a>
       <a href="{% url 'safety' %}">🛡️ Safety</a>
-      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
+      <a href="{% url 'notifications' %}">🔔 Notifications</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -93,6 +93,22 @@
   </div>
 
   <script>
+    // Function to get relative time
+    function getRelativeTime(timestamp) {
+      const now = new Date();
+      const past = new Date(timestamp);
+      const diffMs = now - past;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
+
+      if (diffSec < 60) return 'Just now';
+      if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+      if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+      return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    }
+
     // Load and display recent routes
     function loadRecentRoutes() {
       const history = JSON.parse(localStorage.getItem('routeHistory')) || [];
@@ -103,14 +119,14 @@
         return;
       }
 
-      container.innerHTML = history.map(item => {
-        const distanceKm = (item.distance / 1000).toFixed(1);
-        const timeMin = Math.round(item.time / 60);
+      container.innerHTML = history.slice(0, 6).map(item => {
+        const distanceKm = (item.distanceMeters / 1000).toFixed(1);
+        const relativeTime = getRelativeTime(item.timestamp);
         return `
           <div class="route-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;" onclick="goToRoute('${item.start}', '${item.end}')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
               <h3 style="margin: 0; font-size: 18px;">${item.start} → ${item.end}</h3>
-              <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px;">${timeMin} min</span>
+              <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px;">${relativeTime}</span>
             </div>
             <p style="margin: 0; opacity: 0.9;">${distanceKm} km • Click to navigate</p>
           </div>

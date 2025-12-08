@@ -86,9 +86,25 @@
         const alertTypeColors = {
           'Emergency': '#ff4444',
           'Safety Concern': '#ff8800',
+          'Location Share': '#007bff',
           'Other': '#666666'
         };
         const color = alertTypeColors[alert.alert_type] || '#666666';
+
+        // Special handling for location share alerts
+        if (alert.alert_type === 'Location Share') {
+          return `
+            <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div style="font-weight: 600; color: #495057;">Shared Location</div>
+                <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${alert.formatted_time}</span>
+              </div>
+              <div style="color: #6c757d; font-size: 14px;">
+                ${alert.user} shared their location
+              </div>
+            </div>
+          `;
+        }
 
         return `
           <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
@@ -112,22 +128,39 @@
       const body = document.getElementById('email-detail-body');
       const modal = document.getElementById('email-modal');
 
-      header.innerHTML = `
-        <div style="margin-bottom: 15px;">
-          <h2 style="margin: 0; color: #495057;">${alert.location || 'Safety Alert'}</h2>
-        </div>
-        <div style="color: #6c757d; font-size: 14px;">
-          <strong>From:</strong> ${alert.user}<br>
-          <strong>Type:</strong> ${alert.alert_type}<br>
-          <strong>Time:</strong> ${alert.timestamp}
-        </div>
-      `;
+      if (alert.alert_type === 'Location Share') {
+        header.innerHTML = `
+          <div style="margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #495057;">Shared Location</h2>
+          </div>
+          <div style="color: #6c757d; font-size: 14px;">
+            <strong>Time:</strong> ${alert.timestamp}
+          </div>
+        `;
 
-      body.innerHTML = `
-        <div style="line-height: 1.6; color: #495057;">
-          ${alert.message ? `<p>${alert.message}</p>` : '<p>No additional message.</p>'}
-        </div>
-      `;
+        body.innerHTML = `
+          <div style="line-height: 1.6; color: #495057;">
+            <p>${alert.user} shared their location</p>
+          </div>
+        `;
+      } else {
+        header.innerHTML = `
+          <div style="margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #495057;">${alert.location || 'Safety Alert'}</h2>
+          </div>
+          <div style="color: #6c757d; font-size: 14px;">
+            <strong>From:</strong> ${alert.user}<br>
+            <strong>Type:</strong> ${alert.alert_type}<br>
+            <strong>Time:</strong> ${alert.timestamp}
+          </div>
+        `;
+
+        body.innerHTML = `
+          <div style="line-height: 1.6; color: #495057;">
+            ${alert.message ? `<p>${alert.message}</p>` : '<p>No additional message.</p>'}
+          </div>
+        `;
+      }
 
       modal.style.display = 'flex';
 

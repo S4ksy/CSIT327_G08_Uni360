@@ -23,7 +23,7 @@
       <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
       <a href="{% url 'map' %}" class="active">🗺️ Campus Map</a>
       <a href="{% url 'safety' %}">🛡️ Safety</a>
-      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
+      <a href="{% url 'notifications' %}">🔔 Notifications</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
@@ -120,6 +120,19 @@
     </div>
   </div>
 
+  <!-- Delete Route Confirmation Modal -->
+  <div id="delete-route-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1002; justify-content: center; align-items: center;">
+    <div style="background: white; color: #333; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+      <div style="font-size: 48px; margin-bottom: 20px;">🗑️</div>
+      <h3 style="margin: 0 0 15px 0; color: #dc3545;">Delete Recent Route?</h3>
+      <p style="margin: 0 0 25px 0; color: #666;">This action cannot be undone. Are you sure you want to delete this recent route?</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="closeDeleteRouteModal()" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
+        <button onclick="confirmDeleteRoute()" style="background: linear-gradient(90deg, #dc3545, #c82333); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Leaflet Routing Machine -->
@@ -164,6 +177,7 @@
     let routingControl = null;
     let userMarker = null;
     let routeHistory = JSON.parse(localStorage.getItem('routeHistory')) || [];
+    let routeToDeleteIndex = null;
 
     // Layers we manage
     let routeLayer = null;          // polyline for the currently drawn route
@@ -425,6 +439,22 @@
       return `${mins} min`;
     }
 
+    // Function to get relative time
+    function getRelativeTime(timestamp) {
+      const now = new Date();
+      const past = new Date(timestamp);
+      const diffMs = now - past;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
+
+      if (diffSec < 60) return 'Just now';
+      if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+      if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+      return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+    }
+
     function displayHistory() {
       const panelElement = document.getElementById('recent-routes');
       const footerBtn = document.getElementById('show-more-btn');
@@ -442,7 +472,7 @@
 
       let historyHTML = '';
       toRender.forEach((item, idx) => {
-        const timeStr = new Date(item.timestamp).toLocaleString();
+        const relativeTime = getRelativeTime(item.timestamp);
         const distanceMeters = item.distanceMeters || 0;
         const distanceLabel = formatKm(distanceMeters);
         const minutesLabel = estimateMinutes(distanceMeters);
@@ -450,9 +480,9 @@
                           <div class="history-top">
                             <div class="history-route">${item.start} → ${item.end}</div>
                             <div class="history-meta"><span class="distance-badge">${distanceLabel}</span>
-                            <button onclick="event.stopPropagation(); deleteRoute(${idx})" class="delete-route-btn" title="Delete this route">🗑️</button></div>
+                            <button onclick="event.stopPropagation(); openDeleteRouteModal(${idx})" class="delete-route-btn" title="Delete this route">🗑️</button></div>
                           </div>
-                          <div class="history-details">${minutesLabel} · ${timeStr}</div>
+                          <div class="history-details">${relativeTime}</div>
                         </div>`;
       });
 
@@ -477,10 +507,28 @@
     }
 
     function deleteRoute(idx) {
-      if (!confirm('Delete this recent route?')) return;
       routeHistory.splice(idx, 1);
       localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
       displayHistory();
+    }
+
+    function openDeleteRouteModal(idx) {
+      routeToDeleteIndex = idx;
+      const modal = document.getElementById('delete-route-modal');
+      modal.style.display = 'flex';
+    }
+
+    function closeDeleteRouteModal() {
+      const modal = document.getElementById('delete-route-modal');
+      modal.style.display = 'none';
+      routeToDeleteIndex = null;
+    }
+
+    function confirmDeleteRoute() {
+      if (routeToDeleteIndex !== null) {
+        deleteRoute(routeToDeleteIndex);
+        closeDeleteRouteModal();
+      }
     }
 
     function toggleShowMore() {
