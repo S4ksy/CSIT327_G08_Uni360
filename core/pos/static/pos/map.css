@@ -492,7 +492,7 @@ body {
 /* User search in modal */
 #user-search {
   width: 100%;
-  max-width: 300px;
+  max-width: 380px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -500,9 +500,39 @@ body {
   margin-bottom: 10px;
 }
 
+#users-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+#users-list > div {
+  width: 94% !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+
+#users-list label {
+  grid-column: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+#users-list input[type="checkbox"] {
+  grid-column: 2;
+  margin-left: 10px;
+  width: 18px;
+  height: 18px;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
