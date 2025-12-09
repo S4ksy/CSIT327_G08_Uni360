@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
+from django.db import models
 from .models import Profile, Building, Alert
 import re
 import json
@@ -209,18 +210,23 @@ def get_alerts_view(request):
     ).exclude(
         alert_type='location_share',
         user=request.user
-    ).order_by('-timestamp')[:10]  # Last 10 alerts, excluding location shares sent by current user
+    ).filter(
+        ~models.Q(alert_type='location_share') | models.Q(recipient=request.user)
+    ).order_by('-timestamp')[:10]  # Last 10 alerts, excluding location shares sent by current user, and only showing location shares received by current user
 
     alerts_data = []
     for alert in recent_alerts:
-        full_name_raw = getattr(alert.user.profile, 'full_name', alert.user.username)
-        if full_name_raw:
-            full_name = re.sub(r'\s+', ' ', full_name_raw).strip()
+        if alert.user == request.user:
+            display_name = 'you'
         else:
-            full_name = alert.user.username
+            full_name_raw = getattr(alert.user.profile, 'full_name', alert.user.username)
+            if full_name_raw:
+                display_name = re.sub(r'\s+', ' ', full_name_raw).strip()
+            else:
+                display_name = alert.user.username
         data = {
             'id': alert.id,
-            'user': full_name,
+            'user': display_name,
             'alert_type': alert.get_alert_type_display(),
             'location': alert.location,
             'message': alert.message,
@@ -300,6 +306,7 @@ def share_location_view(request):
                 recipient = User.objects.get(id=recipient_id)
                 Alert.objects.create(
                     user=request.user,
+                    recipient=recipient,
                     alert_type='location_share',
                     location=f"{latitude},{longitude}",
                     message=f"{request.user.profile.full_name} shared their location with you"

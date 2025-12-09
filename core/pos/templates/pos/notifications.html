@@ -14,29 +14,22 @@
         <span style="font-size: 24px;">🎓</span>
         <span>Uni360</span>
       </h2>
-      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
-      <a href="{% url 'map' %}">🗺️ Campus Map</a>
-      <a href="{% url 'safety' %}">🛡️ Safety</a>
-      <a href="#" class="active">🔔 Notifications</a>
+      <div class="user-profile">
+        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="sidebar-profile-pic" style="width: 40px !important; height: 40px !important; max-width: 40px !important; max-height: 40px !important; object-fit: cover !important;">
+        <span class="user-name">{{ request.user.profile.full_name|default:request.user.username }}</span>
+      </div>
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'map' %}">Campus Map</a>
+      <a href="{% url 'safety' %}">Safety</a>
+      <a href="#" class="active">Notifications</a>
+      <a href="{% url 'profile' %}">Profile</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
 
-  <!-- Top Header -->
-  <div class="top-header">
-    <div class="search-bar">
-      <input type="text" placeholder="Search notifications...">
-      <button>Search🔍</button>
-    </div>
-    <div class="profile-menu">
-      <a href="{% url 'profile' %}">
-        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
-      </a>
-    </div>
-  </div>
 
   <div class="content">
-    <h1>Safety Notifications 🔔</h1>
+    <h1>Safety Notifications</h1>
     <p>View all your safety alerts and notifications.</p>
 
     <!-- Active Alerts Section -->
@@ -98,10 +91,10 @@
             <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                 <div style="font-weight: 600; color: #495057;">Shared Location</div>
-                <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${alert.formatted_time}</span>
+                <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${timeAgo(alert.timestamp)}</span>
               </div>
               <div style="color: #6c757d; font-size: 14px; white-space: nowrap;">
-                ${alert.user} shared their location
+                ${alert.user === 'you' ? 'You shared your location' : alert.user + ' shared their location'}
               </div>
             </div>
           `;
@@ -111,7 +104,7 @@
           <div class="email-card ${isUnread ? 'unread' : ''}" onclick="openEmailModal(${index})" style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; cursor: pointer; transition: box-shadow 0.2s; ${isUnread ? 'border-left: 4px solid ' + color : ''}">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
               <div style="font-weight: 600; color: #495057;">${alert.user}</div>
-              <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${alert.formatted_time}</span>
+              <span class="time-ago" data-time="${alert.timestamp}" style="color: #6c757d; font-size: 12px;">${timeAgo(alert.timestamp)}</span>
             </div>
             <div style="font-size: 14px; color: ${color}; margin-bottom: 8px; font-weight: 500;">${alert.alert_type}</div>
             <div style="font-size: 16px; color: #495057; margin-bottom: 8px; font-weight: 500;">${alert.location || 'Safety Alert'}</div>
@@ -141,12 +134,12 @@
 
         let mapLink = '';
         if (alert.latitude && alert.longitude) {
-          mapLink = `<p><a href="${mapUrl}?lat=${alert.latitude}&lng=${alert.longitude}&name=${encodeURIComponent(alert.user)}" style="background: linear-gradient(90deg, #007bff, #0056b3); color: white; padding: 8px 16px; text-decoration: none; border-radius: 5px; font-weight: 600;">View Location on Map 🗺️</a></p>`;
+          mapLink = `<p><a href="${mapUrl}?lat=${alert.latitude}&lng=${alert.longitude}&name=${encodeURIComponent(alert.user)}" style="background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 5px; font-weight: 600;">View Location on Map</a></p>`;
         }
 
         body.innerHTML = `
           <div style="line-height: 1.6; color: #495057;">
-            <p style="white-space: nowrap;">${alert.user} shared their location</p>
+            <p style="white-space: nowrap;">${alert.user === 'you' ? 'You shared your location' : alert.user + ' shared their location'}</p>
             ${mapLink}
           </div>
         `;
@@ -183,27 +176,18 @@
     }
 
     function timeAgo(date) {
-      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const now = new Date();
+      const past = new Date(date);
+      const diffMs = now - past;
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
 
-      if (seconds < 60) return "just now";
-
-      const intervals = {
-        year: 31536000,
-        month: 2592000,
-        week: 604800,
-        day: 86400,
-        hour: 3600,
-        minute: 60
-      };
-
-      for (const interval in intervals) {
-        const count = Math.floor(seconds / intervals[interval]);
-        if (count > 0) {
-          return count === 1
-            ? `1 ${interval} ago`
-            : `${count} ${interval}s ago`;
-        }
-      }
+      if (diffSec < 60) return 'Just now';
+      if (diffMin < 60) return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+      if (diffHour < 24) return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+      return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
     }
 
     function updateTimes() {

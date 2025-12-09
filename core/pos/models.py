@@ -46,6 +46,7 @@ class Alert(models.Model):
         ('other', 'Other'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='received_alerts')
     alert_type = models.CharField(max_length=20, choices=ALERT_TYPES, default='other')
     location = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)

@@ -1,9 +1,20 @@
 /* Notifications Page Styles - Gmail-inspired design */
 
+:root {
+  --primary-color: #6610F2;
+  --secondary-color: #2EC4B6;
+  --accent-color: #FF6B6B;
+  --background-color: #F1F3F5;
+  --surface-color: #FFFFFF;
+  --heading-color: #1C1C1E;
+  --body-text-color: #4A4A4A;
+  --button-color: #6610F2;
+}
+
 .inbox-container {
   display: flex;
-  height: calc(100vh - 120px);
-  background: var(--bg-color);
+  height: calc(100vh - 20px);
+  background: var(--background-color);
   border-radius: 15px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(102, 16, 242, 0.1);
@@ -11,8 +22,8 @@
 
 .inbox-sidebar {
   width: 280px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #764ba2 100%);
-  color: white;
+  background: var(--surface-color);
+  color: var(--body-text-color);
   padding: 30px 20px;
   box-shadow: 2px 0 10px rgba(0,0,0,0.1);
 }
@@ -21,14 +32,46 @@
   margin: 0 0 15px 0;
   font-size: 18px;
   font-weight: 600;
-  color: white;
+  color: var(--heading-color);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.user-profile:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.sidebar-profile-pic {
+  width: 40px !important;
+  height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--primary-color) !important;
+  object-fit: cover !important;
+}
+
+.user-name {
+  color: var(--heading-color);
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .inbox-sidebar p {
   margin: 0;
   opacity: 0.9;
   line-height: 1.5;
-  color: rgba(255,255,255,0.8);
+  color: var(--body-text-color);
 }
 
 .inbox-main {
@@ -39,9 +82,9 @@
 }
 
 .inbox-header {
-  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  color: white;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  background: var(--surface-color);
+  color: var(--body-text-color);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
   padding: 20px 30px;
   display: flex;
   justify-content: space-between;
@@ -51,13 +94,13 @@
 
 .inbox-header h2 {
   margin: 0;
-  color: white;
+  color: var(--heading-color);
   font-size: 24px;
   font-weight: 600;
 }
 
 #total-count {
-  color: rgba(255,255,255,0.8);
+  color: var(--body-text-color);
   font-size: 14px;
   font-weight: 500;
 }
@@ -80,13 +123,13 @@
 }
 
 .email-item:hover {
-  background: linear-gradient(90deg, rgba(102, 16, 242, 0.05) 0%, rgba(46, 196, 182, 0.05) 100%);
+  background: #f0f0f0;
   box-shadow: 0 2px 8px rgba(102, 16, 242, 0.1);
   transform: translateX(4px);
 }
 
 .email-item.unread {
-  background: linear-gradient(90deg, rgba(102, 16, 242, 0.1) 0%, rgba(46, 196, 182, 0.1) 100%);
+  background: #f0f0ff;
   border-left: 4px solid var(--primary-color);
   font-weight: 500;
 }
@@ -169,10 +212,10 @@
 }
 
 .email-detail-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-  color: white;
+  background: var(--surface-color);
+  color: var(--body-text-color);
   padding: 30px;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 .email-detail-meta {
@@ -183,7 +226,7 @@
 }
 
 .email-detail-meta strong {
-  color: #ffffff;
+  color: var(--heading-color);
   font-weight: 600;
 }
 
@@ -192,7 +235,7 @@
   margin: 0;
   font-weight: 600;
   line-height: 1.2;
-  color: white;
+  color: var(--heading-color);
 }
 
 .email-detail-body {

@@ -8,36 +8,32 @@
   <link rel="stylesheet" href="{% static 'pos/profile.css' %}">
 </head>
 <body>
-  <div class="sidebar">
-    <div>
-      <h2>Uni360</h2>
-      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
-      <a href="{% url 'map' %}">🗺️ Campus Map</a>
-      <a href="{% url 'safety' %}">🛡️ Safety</a>
-      <a href="{% url 'notifications' %}">🔔 Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
+<div class="sidebar">
+  <div>
+    <h2 style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 24px;">🎓</span>
+      <span>Uni360</span>
+    </h2>
+    <div class="user-profile">
+      <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="sidebar-profile-pic" style="width: 40px !important; height: 40px !important; max-width: 40px !important; max-height: 40px !important; object-fit: cover !important;">
+      <span class="user-name">{{ request.user.profile.full_name|default:request.user.username }}</span>
+    </div>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'map' %}">Campus Map</a>
+      <a href="{% url 'safety' %}">Safety</a>
+      <a href="{% url 'notifications' %}">Notifications <span id="unread-badge" style="display: none; background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; margin-left: 5px;">0</span></a>
+      <a href="{% url 'profile' %}" class="active">Profile</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
 
-  <!-- Top Header -->
-  <div class="top-header">
-    <div class="search-bar">
-      <input type="text" placeholder="Search anything...">
-      <button>Search🔍</button>
-    </div>
-    <div class="profile-menu">
-      <a href="{% url 'profile' %}">
-        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
-      </a>
-    </div>
-  </div>
 
   <div class="content">
     <h1>Your Profile</h1>
     <div class="profile-card">
       <div class="profile-header">
         <div class="profile-avatar-container">
-          <img src="{% if request.user.profile.profile_picture_data %}{{ request.user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="profile-avatar" id="profile-avatar">
+          <img src="{% if request.user.profile.profile_picture_data %}{{ request.user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="profile-avatar" id="profile-avatar" style="width: 100px !important; height: 100px !important; max-width: 100px !important; max-height: 100px !important; object-fit: cover !important;">
           <form method="POST" enctype="multipart/form-data" class="upload-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="update_picture">
@@ -76,8 +72,8 @@
         </div>
         <!-- Edit Profile Buttons -->
         <div class="edit-buttons" style="margin-top: 20px; text-align: center;">
-          <button type="button" id="edit-btn" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;">Edit Profile</button>
-          <button type="button" id="save-btn" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; display: none;">Save Changes</button>
+          <button type="button" id="edit-btn" style="background: var(--button-color); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;">Edit Profile</button>
+          <button type="button" id="save-btn" style="background: var(--button-color); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; display: none;">Save Changes</button>
           <button type="button" id="cancel-btn" style="background: #666; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; display: none;">Cancel</button>
         </div>
         <!-- Password Change Section (Hidden by default) -->
@@ -98,14 +94,10 @@
               <label for="confirm_password">Confirm New Password</label>
               <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
             </div>
-            <button type="submit" class="save-btn" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;">Change Password</button>
+            <button type="submit" class="save-btn" style="background: var(--button-color); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600;">Change Password</button>
           </form>
         </div>
       </form>
-      <!-- Dark/Light Mode Toggle -->
-      <div style="margin-top: 20px; text-align: center;">
-  <button id="theme-toggle" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">🌙 Dark Mode</button>
-      </div>
     </div>
   </div>
 
@@ -138,25 +130,6 @@
 
 
 
-    // Dark/Light Mode Toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    const body = document.body;
-
-    // Check for saved theme preference or default to light mode
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    if (currentTheme === 'dark') {
-      body.classList.add('dark');
-      themeToggle.textContent = '☀️ Light Mode';
-    } else {
-      themeToggle.textContent = '🌙 Dark Mode';
-    }
-
-    themeToggle.addEventListener('click', () => {
-      body.classList.toggle('dark');
-      const theme = body.classList.contains('dark') ? 'dark' : 'light';
-      localStorage.setItem('theme', theme);
-      themeToggle.textContent = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
-    });
   </script>
 </body>
 </html>

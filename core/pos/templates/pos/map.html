@@ -14,35 +14,28 @@
 
 </head>
 <body>
-  <div class="sidebar">
-    <div>
-      <h2 style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 24px;">🎓</span>
-        <span>Uni360</span>
-      </h2>
-      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
-      <a href="{% url 'map' %}" class="active">🗺️ Campus Map</a>
-      <a href="{% url 'safety' %}">🛡️ Safety</a>
-      <a href="{% url 'notifications' %}">🔔 Notifications</a>
+<div class="sidebar">
+  <div>
+    <h2 style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 24px;">🎓</span>
+      <span>Uni360</span>
+    </h2>
+    <div class="user-profile">
+      <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="sidebar-profile-pic" style="width: 40px !important; height: 40px !important; max-width: 40px !important; max-height: 40px !important; object-fit: cover !important;">
+      <span class="user-name">{{ request.user.profile.full_name|default:request.user.username }}</span>
+    </div>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'map' %}" class="active">Campus Map</a>
+      <a href="{% url 'safety' %}">Safety</a>
+      <a href="{% url 'notifications' %}">Notifications</a>
+      <a href="{% url 'profile' %}">Profile</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
 
-  <!-- Top Header -->
-  <div class="top-header">
-    <div class="search-bar">
-      <input type="text" id="search-input" placeholder="Search buildings...">
-      <button onclick="searchBuilding()">Search🔍</button>
-    </div>
-    <div class="profile-menu">
-      <a href="{% url 'profile' %}">
-        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
-      </a>
-    </div>
-  </div>
 
   <div class="content">
-    <h1>Campus Navigation 🗺️</h1>
+    <h1>Campus Navigation</h1>
     <p>Explore the university campus interactively.</p>
     
     <!-- Controls Panel -->
@@ -55,11 +48,11 @@
         <select id="end-location">
           <option value="">Select destination...</option>
         </select>
-        <button id="calculate-route-btn" onclick="calculateRoute()" disabled>🚶 Get Directions</button>
-        <button onclick="clearRoute()">✖️ Clear Route</button>
+        <button id="calculate-route-btn" onclick="calculateRoute()" disabled>Get Directions</button>
+        <button onclick="clearRoute()">Clear Route</button>
       </div>
       <div class="share-location-controls" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-        <button onclick="openShareLocationModal()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px;">📍 Share Location</button>
+        <button onclick="openShareLocationModal()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px;">Share Location</button>
       </div>
     </div>
 
@@ -74,8 +67,8 @@
     </div>
     
     <!-- Recent Routes shown under the map - FORCE LEFT ALIGNMENT -->
-    <div id="recent-routes-section" class="recent-routes-section" 
-         style="margin-left: 0; margin-right: auto; padding-left: 0; width: 100%; text-align: left; margin-top: 30px;">
+    <div id="recent-routes-section" class="recent-routes-section"
+         style="margin-left: 0; margin-right: auto; padding-left: 0; width: 100%; text-align: left; margin-top: 30px; display: none;">
       <div class="recent-routes-header">
         <h3>📍 Recent Routes</h3>
         <div class="recent-routes-actions">
@@ -108,7 +101,7 @@
 
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
         <button onclick="closeShareLocationModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Cancel</button>
-        <button onclick="shareLocation()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Share Location</button>
+        <button onclick="shareLocation()" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">Share Location</button>
       </div>
     </div>
   </div>
@@ -119,7 +112,7 @@
       <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
       <h3 style="margin: 0 0 15px 0; color: #28a745;">Location Shared Successfully!</h3>
       <p style="margin: 0 0 25px 0; color: #666;">Your location has been shared with the selected users.</p>
-      <button onclick="closeLocationSharedSuccessModal()" style="background: linear-gradient(90deg, #28a745, #20c997); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">OK</button>
+      <button onclick="closeLocationSharedSuccessModal()" style="background: #28a745; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">OK</button>
     </div>
   </div>
 
@@ -131,7 +124,7 @@
       <p style="margin: 0 0 25px 0; color: #666;">This action cannot be undone. Are you sure you want to delete this recent route?</p>
       <div style="display: flex; gap: 10px; justify-content: center;">
         <button onclick="closeDeleteRouteModal()" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600;">Cancel</button>
-        <button onclick="confirmDeleteRoute()" style="background: linear-gradient(90deg, #dc3545, #c82333); color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+        <button onclick="confirmDeleteRoute()" style="background: #dc3545; color: white; border: none; padding: 12px 30px; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
       </div>
     </div>
   </div>
@@ -142,7 +135,11 @@
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
   <script>
-    // CIT-U Campus buildings
+   // Current user info
+   const currentUserId = "{{ request.user.id }}";
+   const currentUsername = "{{ request.user.username }}";
+
+   // CIT-U Campus buildings
     const buildings = [
        { name: "NGE Building", description: "Administration and main classrooms", latitude: 10.2944, longitude: 123.8811, color: "#6610F2" },
        { name: "GLE Building", description: "Administration and main classrooms", latitude: 10.2953, longitude: 123.8812, color: "#6610F2" },
@@ -179,8 +176,17 @@
     let selectedBuilding = null;
     let routingControl = null;
     let userMarker = null;
-    let routeHistory = JSON.parse(localStorage.getItem('routeHistory')) || [];
+    let routeHistory = [];
     let routeToDeleteIndex = null;
+
+    // Helper functions to get user-specific localStorage keys
+    function getRouteHistoryKey() {
+      return `routeHistory_${currentUserId}`;
+    }
+
+    function getSelectedRouteKey() {
+      return `selectedRoute_${currentUserId}`;
+    }
 
     // Layers we manage
     let routeLayer = null;          // polyline for the currently drawn route
@@ -199,6 +205,9 @@
     }
 
     function initMap() {
+      // Load user-specific route history
+      routeHistory = JSON.parse(localStorage.getItem(getRouteHistoryKey())) || [];
+
       // Check if we have shared location parameters
       const sharedLat = "{{ shared_lat|default:'' }}";
       const sharedLng = "{{ shared_lng|default:'' }}";
@@ -242,9 +251,9 @@
       }
 
       // Restore selectedRoute if dashboard pushed one
-      const selectedRoute = JSON.parse(localStorage.getItem('selectedRoute'));
+      const selectedRoute = JSON.parse(localStorage.getItem(getSelectedRouteKey()));
       if (selectedRoute) {
-        localStorage.removeItem('selectedRoute');
+        localStorage.removeItem(getSelectedRouteKey());
         document.getElementById('start-location').value = selectedRoute.start;
         document.getElementById('end-location').value = selectedRoute.end;
         setTimeout(() => calculateRoute(), 800);
@@ -276,7 +285,7 @@
             <h3 style="color: ${building.color}; margin: 0 0 8px 0;">${building.name}</h3>
             <p style="margin: 0 0 10px 0; color: #666;">${building.description}</p>
             <button onclick="setBuildingAsDestination(${safeName})"
-              style="background: linear-gradient(90deg, #6610F2, #2EC4B6); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
+              style="background: #6610F2; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
               Get Directions 🚶
             </button>
           </div>
@@ -447,7 +456,7 @@
           timestamp: new Date().toISOString(),
           distanceMeters: Math.round(totalDistance)
         });
-        localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
+        localStorage.setItem(getRouteHistoryKey(), JSON.stringify(routeHistory));
         displayHistory();
       });
     }
@@ -491,15 +500,19 @@
     }
 
     function displayHistory() {
+      const sectionElement = document.getElementById('recent-routes-section');
       const panelElement = document.getElementById('recent-routes');
       const footerBtn = document.getElementById('show-more-btn');
       if (!panelElement) return;
-      
+
       if (!routeHistory || routeHistory.length === 0) {
-        panelElement.innerHTML = '<p style="color: rgba(255,255,255,0.85)">No recent routes.</p>';
-        if (footerBtn) footerBtn.style.display = 'none';
+        // Hide the entire section for new users with no routes
+        if (sectionElement) sectionElement.style.display = 'none';
         return;
       }
+
+      // Show the section if there are routes
+      if (sectionElement) sectionElement.style.display = 'block';
 
       const total = routeHistory.length;
       const limit = _showAllHistory ? total : HISTORY_LIMIT;
@@ -537,13 +550,13 @@
     function clearHistory() {
       if (!confirm('Clear all recent routes?')) return;
       routeHistory = [];
-      localStorage.removeItem('routeHistory');
+      localStorage.removeItem(getRouteHistoryKey());
       displayHistory();
     }
 
     function deleteRoute(idx) {
       routeHistory.splice(idx, 1);
-      localStorage.setItem('routeHistory', JSON.stringify(routeHistory));
+      localStorage.setItem(getRouteHistoryKey(), JSON.stringify(routeHistory));
       displayHistory();
     }
 

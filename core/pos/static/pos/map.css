@@ -1,30 +1,39 @@
-:root {
-  --primary-color: #6610F2;
-  --secondary-color: #2EC4B6;
-  --accent-color: #FF6B6B;
-  --background-color: #F1F3F5;
-  --surface-color: #FFFFFF;
-  --heading-color: #1C1C1E;
-  --body-text-color: #4A4A4A;
-  --button-gradient: linear-gradient(90deg, #6610F2, #2EC4B6);
+ :root {
+    --primary-color: #6610F2;
+    --secondary-color: #2EC4B6;
+    --accent-color: #FF6B6B;
+    --background-color: #F1F3F5;
+    --surface-color: #FFFFFF;
+    --heading-color: #1C1C1E;
+    --body-text-color: #4A4A4A;
+    --button-color: #6610F2;
+    --card-bg: #FFFFFF;
+    --border-color: #E0E0E0;
+  }
+
+/* Global image constraints to prevent overflow */
+img {
+  max-width: 100% !important;
+  height: auto !important;
+  width: auto !important;
 }
 
 body {
   margin: 0;
   display: flex;
   font-family: 'Poppins', sans-serif;
-  background: var(--button-gradient);
-  color: white;
+  background: var(--background-color);
+  color: var(--body-text-color);
   height: 100vh;
   overflow: hidden;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* Sidebar */
 .sidebar {
   width: 220px;
   height: 95vh;
-  background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
+  background: var(--surface-color);
   padding: 20px;
   box-shadow: 3px 0 10px rgba(0,0,0,0.1);
   display: flex;
@@ -39,12 +48,45 @@ body {
 
 .sidebar h2 {
   text-align: center;
-  color: #fff;
-  margin-bottom: 30px;
+  color: var(--heading-color);
+  margin-bottom: 20px;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.user-profile:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.sidebar-profile-pic {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  border-radius: 50% !important;
+  border: 2px solid var(--primary-color) !important;
+  object-fit: cover !important;
+}
+
+.user-name {
+  color: var(--heading-color);
+  font-weight: 500;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .sidebar a {
-  color: white;
+  color: #333;
   text-decoration: none;
   padding: 10px 15px;
   display: block;
@@ -53,11 +95,16 @@ body {
   margin-bottom: 5px;
 }
 
+.sidebar a:hover {
+  background: #f0f0f0;
+  transform: translateX(4px);
+}
+
 /* Active page effect */
 .sidebar a.active {
-  background: var(--button-gradient);
+  background: var(--button-color);
+  color: white;
   font-weight: bold;
-  box-shadow: 0 0 10px rgba(102,16,242,0.8);
   transform: translateX(4px);
 }
 
@@ -76,24 +123,24 @@ body {
   left: 220px;
   right: 0;
   height: 70px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
+  background: var(--surface-color);
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 0 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   z-index: 10;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--card-bg);
   border-radius: 25px;
   padding: 5px 10px;
   width: 400px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
 }
 
 .search-bar input {
@@ -132,10 +179,10 @@ body {
 .content {
   flex: 1;
   margin-left: 240px;
-  margin-top: 100px;
+  margin-top: 20px;
   padding: 20px 40px;
   overflow-y: auto;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 20px);
 }
 
 .content h1 {
@@ -170,7 +217,7 @@ body {
 }
 
 .route-controls button {
-  background: var(--button-gradient);
+  background: var(--button-color);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -222,7 +269,7 @@ body {
 }
 
 .btn-primary {
-  background: var(--button-gradient);
+  background: var(--button-color);
   color: white;
   border: none;
   padding: 10px 20px;
@@ -254,7 +301,7 @@ body {
 
 .recent-routes-header h3 {
   margin: 0;
-  color: white;
+  color: var(--heading-color);
   font-size: 24px;
   font-weight: 800;
 }
@@ -266,8 +313,8 @@ body {
 }
 
 .clear-history {
-  background: rgba(255,255,255,0.12);
-  color: white;
+  background: var(--surface-color);
+  color: var(--body-text-color);
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
@@ -290,17 +337,17 @@ body {
 }
 
 .history-item {
-  background: rgba(255,255,255,0.08);
+  background: var(--surface-color);
   padding: 15px;
   border-radius: 10px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-  color: white;
+  color: var(--body-text-color);
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   width: 100%;
   max-width: 300px;
   cursor: pointer;
   text-align: left;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(0,0,0,0.1);
 }
 
 .history-item:hover {
@@ -313,14 +360,14 @@ body {
   font-weight: 700;
   margin-bottom: 8px;
   font-size: 16px;
-  color: white;
+  color: var(--heading-color);
 }
 
 .history-details {
   font-size: 13px;
   opacity: 0.9;
   margin-top: 5px;
-  color: rgba(255,255,255,0.8);
+  color: var(--body-text-color);
 }
 
 .history-top {
@@ -344,6 +391,7 @@ body {
   font-weight: 600;
   font-size: 12px;
   white-space: nowrap;
+  color: black;
 }
 
 .delete-route-btn {
@@ -369,8 +417,8 @@ body {
 }
 
 .show-more {
-  background: rgba(255,255,255,0.1);
-  color: white;
+  background: var(--surface-color);
+  color: var(--body-text-color);
   border: none;
   padding: 8px 20px;
   border-radius: 8px;
@@ -439,6 +487,17 @@ body {
 
 .leaflet-routing-container .leaflet-routing-instruction-distance {
   color: #666 !important;
+}
+
+/* User search in modal */
+#user-search {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 /* Scrollbar Styling */

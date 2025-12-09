@@ -1,22 +1,25 @@
 :root {
-  --primary-color: #5c5ce0;
-  --secondary-color: #7b4ee6;
-  --text-color: #2b2b2b;
+  --primary-color: #6610F2;
+  --secondary-color: #2EC4B6;
+  --accent-color: #FF6B6B;
+  --background-color: #F1F3F5;
+  --surface-color: #FFFFFF;
+  --heading-color: #1C1C1E;
+  --body-text-color: #4A4A4A;
+  --button-color: #6610F2;
+  --text-color: #4A4A4A;
   --highlight-color: #ede8ff;
-  --button-gradient: linear-gradient(90deg, #5c5ce0, #7b4ee6);
-  --bg-color: #ffffff;
-  --card-bg: #ffffff;
+  --bg-color: #F1F3F5;
+  --card-bg: #FFFFFF;
   --border-color: #e0e0e0;
-  --sidebar-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --sidebar-text: white;
 }
 
 
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--background-color);
+  color: var(--body-text-color);
   overflow-x: hidden;
   scroll-behavior: smooth;
   display: flex;
@@ -96,7 +99,7 @@ nav a:hover, nav a.active {
 }
 
 .nav-buttons a {
-  background: var(--button-gradient);
+  background: var(--button-color);
   color: #fff;
   padding: 8px 18px;
   border-radius: 8px;
@@ -152,7 +155,7 @@ input:focus {
 }
 
 button {
-  background: var(--button-gradient);
+  background: var(--button-color);
   color: #fff;
   padding: 12px 30px;
   border: none;

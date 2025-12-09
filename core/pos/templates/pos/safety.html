@@ -8,41 +8,34 @@
   <link rel="stylesheet" href="{% static 'pos/dashboard.css' %}">
 </head>
 <body>
-  <div class="sidebar">
-    <div>
-      <h2 style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 24px;">🎓</span>
-        <span>Uni360</span>
-      </h2>
-      <a href="{% url 'dashboard' %}">🏠 Dashboard</a>
-      <a href="{% url 'map' %}">🗺️ Campus Map</a>
-      <a href="#" class="active">🛡️ Safety</a>
-      <a href="{% url 'notifications' %}">🔔 Notifications</a>
+<div class="sidebar">
+  <div>
+    <h2 style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 24px;">🎓</span>
+      <span>Uni360</span>
+    </h2>
+    <div class="user-profile">
+      <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="Profile Picture" class="sidebar-profile-pic" style="width: 40px !important; height: 40px !important; max-width: 40px !important; max-height: 40px !important; object-fit: cover !important;">
+      <span class="user-name">{{ request.user.profile.full_name|default:request.user.username }}</span>
+    </div>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'map' %}">Campus Map</a>
+      <a href="#" class="active">Safety</a>
+      <a href="{% url 'notifications' %}">Notifications</a>
+      <a href="{% url 'profile' %}">Profile</a>
     </div>
     <a href="{% url 'logout' %}" class="logout">Logout</a>
   </div>
 
-  <!-- Top Header -->
-  <div class="top-header">
-    <div class="search-bar">
-      <input type="text" placeholder="Search anything...">
-      <button>Search🔍</button>
-    </div>
-    <div class="profile-menu">
-      <a href="{% url 'profile' %}">
-        <img src="{% if user.profile.profile_picture_data %}{{ user.profile.profile_picture_data }}{% else %}{% static 'pos/default-profile.jpg' %}{% endif %}" alt="User Profile Image" class="profile-icon" role="button" tabindex="0" aria-label="Go to profile">
-      </a>
-    </div>
-  </div>
 
   <div class="content">
-    <h1>Safety Center 🛡️</h1>
+    <h1>Safety Center</h1>
     <p>Report safety concerns and emergencies.</p>
 
     <!-- Safety Alert Button -->
     <div style="margin-top: 30px;">
       <button id="safety-alert-btn" style="background: #ff6b6b; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 18px; cursor: pointer; box-shadow: 0 4px 10px rgba(255,107,107,0.5);">
-        🚨 Send Safety Alert
+        Send Safety Alert
       </button>
     </div>
 
@@ -60,7 +53,7 @@
         <input type="text" id="location" name="location" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
         <label for="message">Message (optional):</label>
         <textarea id="message" name="message" rows="4" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;"></textarea>
-        <button type="submit" style="background: var(--button-gradient); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Send Alert</button>
+        <button type="submit" style="background: #6610F2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Send Alert</button>
         <button type="button" id="cancel-alert" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-left: 10px;">Cancel</button>
       </form>
     </div>
@@ -71,7 +64,7 @@
         <div style="font-size: 60px; color: #4CAF50; margin-bottom: 20px;">✅</div>
         <h2 style="color: #333; margin: 0 0 15px 0;">Alert Sent Successfully!</h2>
         <p style="color: #666; margin: 0 0 25px 0;">Your safety alert has been sent to the authorities. Help is on the way.</p>
-        <button id="success-ok-btn" style="background: var(--button-gradient); color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 600;">OK</button>
+        <button id="success-ok-btn" style="background: #4CAF50; color: white; border: none; padding: 12px 30px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 600;">OK</button>
       </div>
     </div>
   </div>
