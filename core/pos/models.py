@@ -19,6 +19,10 @@ class Profile(models.Model):
                 self.full_name = full_name
             else:
                 self.full_name = self.user.username
+        else:
+            # Clean existing full_name
+            import re
+            self.full_name = re.sub(r'\s+', ' ', self.full_name).strip()
 
         super().save(*args, **kwargs)
 

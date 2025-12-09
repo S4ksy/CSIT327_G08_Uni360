@@ -42,42 +42,66 @@
     <!-- Locations Section -->
     <div style="margin-top: 30px;">
       <h2>Campus Locations 📍</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
         <!-- GLE Building -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="GLE Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('GLE Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/GLE building.jfif' %}" alt="GLE Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
           <h3>GLE Building</h3>
-          <p>General Education Building</p>
         </div>
         <!-- Library -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="Library Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('Library')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/Library.jfif' %}" alt="Library Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
           <h3>Library</h3>
-          <p>Main campus library with study areas</p>
         </div>
         <!-- Parking -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="Parking Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('Parking')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div class="image-gallery">
+            <img src="{% static 'pos/Espacio Parking.jfif' %}" alt="Parking">
+            <img src="{% static 'pos/GLE parking.jfif' %}" alt="Parking">
+            <img src="{% static 'pos/NGE parking.jfif' %}" alt="Parking">
+            <img src="{% static 'pos/NGE parking2.jfif' %}" alt="Parking">
+            <img src="{% static 'pos/RTL Parking.jfif' %}" alt="Parking">
+            <img src="{% static 'pos/RTL parking2.jfif' %}" alt="Parking">
+          </div>
           <h3>Parking</h3>
-          <p>Student and faculty parking areas</p>
         </div>
         <!-- Gymnasium -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="Gymnasium Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('Gymnasium')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/GYM.jfif' %}" alt="Gymnasium Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
           <h3>Gymnasium</h3>
-          <p>Sports facilities and gym</p>
         </div>
         <!-- Main Canteen -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="Main Canteen Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('Main Canteen')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div class="image-gallery">
+            <img src="{% static 'pos/GYM canteen.jfif' %}" alt="Canteen">
+            <img src="{% static 'pos/Main canteen.jfif' %}" alt="Canteen">
+          </div>
           <h3>Main Canteen</h3>
-          <p>Cafeteria and student activities</p>
         </div>
         <!-- NGE Building -->
-        <div class="location-card" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-          <img src="" alt="NGE Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px; background: #f0f0f0;">
+        <div class="location-card" onclick="showModal('NGE Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/NGE main building.jfif' %}" alt="NGE Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
           <h3>NGE Building</h3>
-          <p>Administration and main classrooms</p>
+        </div>
+        <!-- ACAD Building -->
+        <div class="location-card" onclick="showModal('ACAD Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/ACAD building.jfif' %}" alt="ACAD Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
+          <h3>ACAD Building</h3>
+        </div>
+        <!-- Allied Building -->
+        <div class="location-card" onclick="showModal('Allied Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/ALLIED 2.jfif' %}" alt="Allied Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
+          <h3>ALLIED Building</h3>
+        </div>
+        <!-- RTL Building -->
+        <div class="location-card" onclick="showModal('RTL Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/RTL building.jfif' %}" alt="RTL Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
+          <h3>RTL Building</h3>
+        </div>
+        <!-- SAL Building -->
+        <div class="location-card" onclick="showModal('SAL Building')" style="background: rgba(255,255,255,0.9); color: #333; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <img src="{% static 'pos/SAL Building.webp' %}" alt="SAL Building Photo" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
+          <h3>SAL Building</h3>
         </div>
       </div>
  
@@ -126,7 +150,7 @@
           <div class="route-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s;" onclick="goToRoute('${item.start}', '${item.end}')">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
               <h3 style="margin: 0; font-size: 18px;">${item.start} → ${item.end}</h3>
-              <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px;">${relativeTime}</span>
+              <span style="background: rgba(255,255,255,0.2); padding: 5px 10px; border-radius: 20px; font-size: 12px; white-space: nowrap;">${relativeTime}</span>
             </div>
             <p style="margin: 0; opacity: 0.9;">${distanceKm} km • Click to navigate</p>
           </div>
@@ -143,49 +167,152 @@
     window.onload = function() {
       loadRecentRoutes();
     };
-
-    // Safety Alert Button Functionality
-    const safetyBtn = document.getElementById('safety-alert-btn');
-    const alertForm = document.getElementById('alert-form');
-    const cancelBtn = document.getElementById('cancel-alert');
-    const form = document.getElementById('alert-form-element');
-
-    safetyBtn.addEventListener('click', () => {
-      alertForm.style.display = 'block';
-    });
-
-    cancelBtn.addEventListener('click', () => {
-      alertForm.style.display = 'none';
-    });
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const formData = new FormData(form);
-
-      fetch('{% url "send_alert" %}', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success') {
-          alert(data.message);
-          alertForm.style.display = 'none';
-          form.reset();
-        } else {
-          alert('Error: ' + data.message);
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while sending the alert.');
-      });
-    });
   </script>
 
+  <!-- Location Modal -->
+  <div id="location-modal" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-buttons">
+        <button id="get-direction-btn" onclick="getDirection()">Get Direction</button>
+        <button onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Viewer Modal -->
+  <div id="image-viewer-modal" class="modal">
+    <div class="image-viewer-content">
+      <span class="close-viewer" onclick="closeImageViewer()">&times;</span>
+      <img id="viewer-image" src="" alt="Full Size Image">
+    </div>
+  </div>
+
+  <script>
+    let selectedLocation = '';
+    let modalState = 'main';
+    let parentLocation = '';
+
+    const locationImages = {
+      'GLE Building': ['{% static "pos/GLE building.jfif" %}', '{% static "pos/GLE view.jfif" %}'],
+      'Library': ['{% static "pos/Library.jfif" %}', '{% static "pos/Library view.jfif" %}'],
+      'Gymnasium': ['{% static "pos/GYM.jfif" %}', '{% static "pos/GYM view.jfif" %}'],
+      'NGE Building': ['{% static "pos/NGE main building.jfif" %}', '{% static "pos/NGE view.jfif" %}'],
+      'ACAD Building': ['{% static "pos/ACAD building.jfif" %}', '{% static "pos/ACAD view.jfif" %}'],
+      'Allied Building': ['{% static "pos/ALLIED 2.jfif" %}', '{% static "pos/ALLIED 3.jfif" %}'],
+      'RTL Building': ['{% static "pos/RTL building.jfif" %}', '{% static "pos/RTL view.jfif" %}'],
+      'SAL Building': ['{% static "pos/SAL Building.webp" %}', '{% static "pos/SAL view.jfif" %}']
+    };
+
+    const parkingImages = {
+      'Espacio Parking': '{% static "pos/Espacio Parking.jfif" %}',
+      'GLE Parking': '{% static "pos/GLE parking.jfif" %}',
+      'NGE Parking': ['{% static "pos/NGE parking.jfif" %}', '{% static "pos/NGE parking2.jfif" %}'],
+      'RTL Parking': ['{% static "pos/RTL Parking.jfif" %}', '{% static "pos/RTL parking2.jfif" %}']
+    };
+
+    const canteenImages = {
+      'GYM Canteen': '{% static "pos/GYM canteen.jfif" %}',
+      'Main Canteen': '{% static "pos/Main canteen.jfif" %}'
+    };
+
+    function showModal(location) {
+      selectedLocation = location;
+      document.getElementById('modal-title').innerText = location;
+      const body = document.getElementById('modal-body');
+      const directionBtn = document.getElementById('get-direction-btn');
+
+      if (location === 'Parking') {
+        modalState = 'list';
+        parentLocation = 'Parking';
+        body.innerHTML = '<p>Select a specific parking area:</p><div class="sub-options parking-grid">' +
+          '<div class="sub-card" onclick="selectSubLocation(\'Espacio Parking\')"><img src="' + parkingImages['Espacio Parking'] + '" alt="Espacio Parking" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>Espacio Parking</div></div>' +
+          '<div class="sub-card" onclick="selectSubLocation(\'GLE Parking\')"><img src="' + parkingImages['GLE Parking'] + '" alt="GLE Parking" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>GLE Parking</div></div>' +
+          '<div class="sub-card" onclick="selectSubLocation(\'NGE Parking\')"><img src="' + parkingImages['NGE Parking'][0] + '" alt="NGE Parking" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>NGE Parking</div></div>' +
+          '<div class="sub-card" onclick="selectSubLocation(\'RTL Parking\')"><img src="' + parkingImages['RTL Parking'][0] + '" alt="RTL Parking" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>RTL Parking</div></div>' +
+          '</div>';
+        directionBtn.style.display = 'none';
+      } else if (location === 'Main Canteen') {
+        modalState = 'list';
+        parentLocation = 'Main Canteen';
+        body.innerHTML = '<p>Select a specific canteen:</p><div class="sub-options">' +
+          '<div class="sub-card" onclick="selectSubLocation(\'GYM Canteen\')"><img src="' + canteenImages['GYM Canteen'] + '" alt="GYM Canteen" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>GYM Canteen</div></div>' +
+          '<div class="sub-card" onclick="selectSubLocation(\'Main Canteen\')"><img src="' + canteenImages['Main Canteen'] + '" alt="Main Canteen" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;"><div>Main Canteen</div></div>' +
+          '</div>';
+        directionBtn.style.display = 'none';
+      } else {
+        modalState = 'building';
+        const images = locationImages[location];
+        if (images && images.length > 0) {
+          const imageHtml = images.map(src => '<img src="' + src + '" alt="' + location + ' Photo" onclick="showImageViewer(this.src)" style="cursor: pointer; width: 100%; max-width: 250px; height: auto; border-radius: 10px; margin: 5px;">').join('');
+          body.innerHTML = '<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">' + imageHtml + '</div>';
+        } else {
+          body.innerHTML = '<p>Get directions to this location.</p>';
+        }
+        directionBtn.style.display = 'inline-block';
+      }
+
+      document.getElementById('location-modal').style.display = 'flex';
+    }
+
+    function selectSubLocation(subLocation) {
+      selectedLocation = subLocation;
+      modalState = 'detail';
+      document.getElementById('modal-title').innerText = subLocation;
+      const body = document.getElementById('modal-body');
+      const directionBtn = document.getElementById('get-direction-btn');
+      const imageSrc = parkingImages[subLocation] || canteenImages[subLocation];
+      if (imageSrc) {
+        if (Array.isArray(imageSrc)) {
+          const imageHtml = imageSrc.map(src => '<img src="' + src + '" alt="' + subLocation + ' Photo" onclick="showImageViewer(this.src)" style="cursor: pointer; width: 100%; max-width: 250px; height: auto; border-radius: 10px; margin: 5px;">').join('');
+          body.innerHTML = '<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;">' + imageHtml + '</div>';
+        } else {
+          body.innerHTML = '<img src="' + imageSrc + '" alt="' + subLocation + ' Photo" onclick="showImageViewer(this.src)" style="cursor: pointer; width: 100%; max-width: 500px; height: auto; border-radius: 10px; display: block; margin: 0 auto;">';
+        }
+      } else {
+        body.innerHTML = '<p>Get directions to this location.</p>';
+      }
+      directionBtn.style.display = 'inline-block';
+    }
+
+    function getDirection() {
+      // Assuming current location is not set, just go to map with end location
+      localStorage.setItem('selectedRoute', JSON.stringify({start: 'current', end: selectedLocation}));
+      window.location.href = '{% url "map" %}';
+    }
+
+    function closeModal() {
+      if (modalState === 'detail') {
+        showModal(parentLocation);
+      } else {
+        document.getElementById('location-modal').style.display = 'none';
+        modalState = 'main';
+        parentLocation = '';
+      }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('location-modal');
+      const viewerModal = document.getElementById('image-viewer-modal');
+      if (event.target == modal) {
+        closeModal();
+      }
+      if (event.target == viewerModal) {
+        closeImageViewer();
+      }
+    }
+
+    function showImageViewer(src) {
+      document.getElementById('viewer-image').src = src;
+      document.getElementById('image-viewer-modal').style.display = 'flex';
+    }
+
+    function closeImageViewer() {
+      document.getElementById('image-viewer-modal').style.display = 'none';
+    }
+  </script>
 
 </body>
 </html>

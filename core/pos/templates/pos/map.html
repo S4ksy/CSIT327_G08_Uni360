@@ -99,6 +99,9 @@
       <h3 style="margin: 0 0 15px 0; color: #333;">📍 Share Your Location</h3>
       <p style="margin: 0 0 15px 0; color: #666;">Select users to share your current location with:</p>
 
+      <div style="margin-bottom: 15px;">
+        <input type="text" id="user-search" placeholder="Search users..." style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+      </div>
       <div id="users-list" style="margin-bottom: 20px; max-height: 200px; overflow-y: auto;">
         <!-- Users will be loaded here -->
       </div>
@@ -196,7 +199,22 @@
     }
 
     function initMap() {
-      map = L.map('map').setView([10.2950, 123.8810], 17.5);
+      // Check if we have shared location parameters
+      const sharedLat = "{{ shared_lat|default:'' }}";
+      const sharedLng = "{{ shared_lng|default:'' }}";
+      const sharedName = "{{ shared_name|default:'' }}";
+
+      let initialLat = 10.2950;
+      let initialLng = 123.8810;
+      let initialZoom = 17.5;
+
+      if (sharedLat && sharedLng) {
+        initialLat = parseFloat(sharedLat);
+        initialLng = parseFloat(sharedLng);
+        initialZoom = 19; // Zoom in closer for shared location
+      }
+
+      map = L.map('map').setView([initialLat, initialLng], initialZoom);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
@@ -210,6 +228,18 @@
 
       // Enable routing button immediately
       document.getElementById('calculate-route-btn').disabled = false;
+
+      // Add marker for shared location if present
+      if (sharedLat && sharedLng) {
+        const popupText = sharedName ? `Shared Location by ${sharedName}` : 'Shared Location';
+        const sharedMarker = L.marker([initialLat, initialLng], {
+          icon: L.divIcon({
+            html: '📍',
+            className: 'shared-location-marker',
+            iconSize: [30, 30]
+          })
+        }).addTo(map).bindPopup(popupText).openPopup();
+      }
 
       // Restore selectedRoute if dashboard pushed one
       const selectedRoute = JSON.parse(localStorage.getItem('selectedRoute'));
@@ -226,6 +256,11 @@
       markers = [];
 
       buildings.forEach((building, index) => {
+        // Skip building, parking, canteen, library, and gym icons
+        if (!building.type || building.type === 'parking' || building.type === 'cafeteria' || building.type === 'library' || building.type === 'sports') {
+          return;
+        }
+
         const icon = buildingIcons[building.type] || buildingIcons.default;
         const customIcon = L.divIcon({
           className: 'custom-marker',
@@ -240,7 +275,7 @@
           <div style="min-width: 200px;">
             <h3 style="color: ${building.color}; margin: 0 0 8px 0;">${building.name}</h3>
             <p style="margin: 0 0 10px 0; color: #666;">${building.description}</p>
-            <button onclick="setBuildingAsDestination(${safeName})" 
+            <button onclick="setBuildingAsDestination(${safeName})"
               style="background: linear-gradient(90deg, #6610F2, #2EC4B6); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; width: 100%;">
               Get Directions 🚶
             </button>
@@ -482,7 +517,7 @@
                             <div class="history-meta"><span class="distance-badge">${distanceLabel}</span>
                             <button onclick="event.stopPropagation(); openDeleteRouteModal(${idx})" class="delete-route-btn" title="Delete this route">🗑️</button></div>
                           </div>
-                          <div class="history-details">${relativeTime}</div>
+                          <div class="history-details" style="white-space: nowrap;">${relativeTime}</div>
                         </div>`;
       });
 
@@ -600,6 +635,8 @@
       const modal = document.getElementById('share-location-modal');
       modal.style.display = 'flex';
       loadUsers();
+      // Clear search on open
+      document.getElementById('user-search').value = '';
     }
 
     function closeShareLocationModal() {
@@ -612,6 +649,8 @@
       modal.style.display = 'none';
     }
 
+    let allUsers = [];
+
     function loadUsers() {
       fetch('/get-users/', {
         credentials: 'same-origin'
@@ -623,37 +662,51 @@
           return response.json();
         })
         .then(data => {
-          const usersList = document.getElementById('users-list');
-          usersList.innerHTML = '';
-
-          if (data.users.length === 0) {
-            usersList.innerHTML = '<p>No other users found.</p>';
-            return;
-          }
-
-          data.users.forEach(user => {
-            const userDiv = document.createElement('div');
-            userDiv.style.display = 'flex';
-            userDiv.style.alignItems = 'center';
-            userDiv.style.marginBottom = '10px';
-            userDiv.style.padding = '10px';
-            userDiv.style.border = '1px solid #ddd';
-            userDiv.style.borderRadius = '8px';
-
-            userDiv.innerHTML = `
-              <label for="user-${user.id}" style="margin: 0; cursor: pointer; flex: 1;">
-                <strong>${user.full_name || 'No name'}</strong> (${user.school_id || 'No ID'})
-              </label>
-              <input type="checkbox" id="user-${user.id}" value="${user.id}" style="margin-left: 10px;">
-            `;
-
-            usersList.appendChild(userDiv);
-          });
+          allUsers = data.users;
+          displayUsers(allUsers);
         })
         .catch(error => {
           console.error('Error loading users:', error);
           document.getElementById('users-list').innerHTML = '<p>Error loading users.</p>';
         });
+    }
+
+    function displayUsers(users) {
+      const usersList = document.getElementById('users-list');
+      usersList.innerHTML = '';
+
+      if (users.length === 0) {
+        usersList.innerHTML = '<p>No users found.</p>';
+        return;
+      }
+
+      users.forEach(user => {
+        const userDiv = document.createElement('div');
+        userDiv.style.display = 'flex';
+        userDiv.style.alignItems = 'center';
+        userDiv.style.marginBottom = '10px';
+        userDiv.style.padding = '10px';
+        userDiv.style.border = '1px solid #ddd';
+        userDiv.style.borderRadius = '8px';
+
+        userDiv.innerHTML = `
+          <label for="user-${user.id}" style="margin: 0; cursor: pointer; flex: 1; white-space: nowrap;">
+            <strong>${user.full_name || 'No name'}</strong>
+          </label>
+          <input type="checkbox" id="user-${user.id}" value="${user.id}" style="margin-left: 10px;">
+        `;
+
+        usersList.appendChild(userDiv);
+      });
+    }
+
+    function filterUsers() {
+      const searchTerm = document.getElementById('user-search').value.toLowerCase();
+      const filteredUsers = allUsers.filter(user =>
+        (user.full_name || '').toLowerCase().includes(searchTerm) ||
+        (user.username || '').toLowerCase().includes(searchTerm)
+      );
+      displayUsers(filteredUsers);
     }
 
     function shareLocation() {
@@ -712,6 +765,9 @@
       const showMoreBtn = document.getElementById('show-more-btn');
       if (showMoreBtn) showMoreBtn.addEventListener('click', toggleShowMore);
       displayHistory();
+      // Add search event listener
+      const userSearch = document.getElementById('user-search');
+      if (userSearch) userSearch.addEventListener('input', filterUsers);
     });
   </script>
 </body>

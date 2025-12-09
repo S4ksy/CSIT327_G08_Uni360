@@ -211,10 +211,16 @@ def get_alerts_view(request):
         user=request.user
     ).order_by('-timestamp')[:10]  # Last 10 alerts, excluding location shares sent by current user
 
-    alerts_data = [
-        {
+    alerts_data = []
+    for alert in recent_alerts:
+        full_name_raw = getattr(alert.user.profile, 'full_name', alert.user.username)
+        if full_name_raw:
+            full_name = re.sub(r'\s+', ' ', full_name_raw).strip()
+        else:
+            full_name = alert.user.username
+        data = {
             'id': alert.id,
-            'user': getattr(alert.user.profile, 'full_name', alert.user.username),
+            'user': full_name,
             'alert_type': alert.get_alert_type_display(),
             'location': alert.location,
             'message': alert.message,
@@ -222,8 +228,21 @@ def get_alerts_view(request):
             'formatted_time': timezone.localtime(alert.timestamp).strftime('%I:%M %p').lower(),
             'is_read': request.user in alert.read_by.all()
         }
-        for alert in recent_alerts
-    ]
+
+        # For location share alerts, parse latitude and longitude
+        if alert.alert_type == 'location_share' and alert.latitude and alert.longitude:
+            data['latitude'] = float(alert.latitude)
+            data['longitude'] = float(alert.longitude)
+        elif alert.alert_type == 'location_share' and alert.location:
+            # Fallback: parse from location string if lat/lng not set
+            try:
+                lat_str, lng_str = alert.location.split(',')
+                data['latitude'] = float(lat_str)
+                data['longitude'] = float(lng_str)
+            except (ValueError, AttributeError):
+                pass
+
+        alerts_data.append(data)
 
     # Mark all as read for this user
     for alert in recent_alerts:
@@ -247,15 +266,19 @@ def get_unread_alerts_count(request):
 @login_required
 def get_users_view(request):
     users = User.objects.exclude(id=request.user.id).select_related('profile')
-    users_data = [
-        {
+    users_data = []
+    for user in users:
+        full_name_raw = getattr(user.profile, 'full_name', user.username)
+        if full_name_raw:
+            full_name = re.sub(r'\s+', ' ', full_name_raw).strip()
+        else:
+            full_name = user.username
+        users_data.append({
             'id': user.id,
             'username': user.username,
-            'full_name': getattr(user.profile, 'full_name', user.username),
+            'full_name': full_name,
             'school_id': getattr(user.profile, 'school_id', ''),
-        }
-        for user in users
-    ]
+        })
     return JsonResponse({'users': users_data})
 
 
@@ -297,6 +320,13 @@ def share_location_view(request):
 
 @login_required
 def map_view(request):
+    # Check for location parameters
+    shared_lat = request.GET.get('lat')
+    shared_lng = request.GET.get('lng')
+    shared_name = request.GET.get('name')
+    if shared_name:
+        shared_name = re.sub(r'\s+', ' ', shared_name).strip()
+
     # Check if we have buildings in the database
     if Building.objects.exists():
         # Use buildings from database
@@ -325,7 +355,7 @@ def map_view(request):
                 "type": "academic"
             },
             {
-                "name": "NGE Building", 
+                "name": "NGE Building",
                 "description": "Engineering Building",
                 "latitude": 10.3234,
                 "longitude": 123.9086,
@@ -334,7 +364,7 @@ def map_view(request):
             },
             {
                 "name": "GLE Building",
-                "description": "General Education Building", 
+                "description": "General Education Building",
                 "latitude": 10.3230,
                 "longitude": 123.9081,
                 "color": "#FF6B6B",
@@ -343,7 +373,7 @@ def map_view(request):
             {
                 "name": "SAL Building",
                 "description": "Science and Laboratory Building",
-                "latitude": 10.3236, 
+                "latitude": 10.3236,
                 "longitude": 123.9088,
                 "color": "#FF9F1C",
                 "type": "academic"
@@ -364,7 +394,7 @@ def map_view(request):
                 "color": "#4A90E2",
                 "type": "academic"
             },
-            
+
             # Library
             {
                 "name": "College Library",
@@ -374,7 +404,7 @@ def map_view(request):
                 "color": "#9C27B0",
                 "type": "library"
             },
-            
+
             # Sports Facilities
             {
                 "name": "GYM",
@@ -392,7 +422,7 @@ def map_view(request):
                 "color": "#795548",
                 "type": "sports"
             },
-            
+
             # Canteens
             {
                 "name": "Main Canteen",
@@ -410,7 +440,7 @@ def map_view(request):
                 "color": "#8BC34A",
                 "type": "canteen"
             },
-            
+
             # Parking Areas (5 total)
             {
                 "name": "Main Parking",
@@ -452,7 +482,7 @@ def map_view(request):
                 "color": "#CFD8DC",
                 "type": "parking"
             },
-            
+
             # Campus Entrance
             {
                 "name": "N. Bacalso Entrance",
@@ -463,5 +493,12 @@ def map_view(request):
                 "type": "entrance"
             }
         ]
-    
-    return render(request, 'pos/map.html', {'buildings': json.dumps(buildings_data)})
+
+    context = {
+        'buildings': json.dumps(buildings_data),
+        'shared_lat': shared_lat,
+        'shared_lng': shared_lng,
+        'shared_name': shared_name
+    }
+
+    return render(request, 'pos/map.html', context)
