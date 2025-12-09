@@ -41,7 +41,7 @@
             <input type="file" name="profile_picture" id="profile_picture" accept="image/*" style="display: none;">
           </form>
         </div>
-        <h2>{{ request.user.username }}</h2>
+        <h2>{% firstof request.user.profile.full_name request.user.get_full_name request.user.username %}</h2>
       </div>
       <form method="POST" id="profile-form">
         {% csrf_token %}
@@ -113,20 +113,20 @@
     const cancelBtn = document.getElementById('cancel-btn');
 
     editBtn.addEventListener('click', () => {
-      // Show password section and save/cancel, hide edit
-      document.getElementById('password-section').style.display = 'block';
-      editBtn.style.display = 'none';
-      saveBtn.style.display = 'inline-block';
-      cancelBtn.style.display = 'inline-block';
-    });
+       // Show password section and save/cancel, hide edit
+       document.getElementById('password-section').style.display = 'block';
+       editBtn.style.display = 'none';
+       saveBtn.style.display = 'inline-block';
+       cancelBtn.style.display = 'inline-block';
+     });
 
     cancelBtn.addEventListener('click', () => {
-      // Hide password section and show edit, hide save/cancel
-      document.getElementById('password-section').style.display = 'none';
-      editBtn.style.display = 'inline-block';
-      saveBtn.style.display = 'none';
-      cancelBtn.style.display = 'none';
-    });
+       // Hide password section and show edit, hide save/cancel
+       document.getElementById('password-section').style.display = 'none';
+       editBtn.style.display = 'inline-block';
+       saveBtn.style.display = 'none';
+       cancelBtn.style.display = 'none';
+     });
 
 
 
